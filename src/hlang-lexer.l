@@ -45,7 +45,7 @@ int funccallopen = 0;
 [=]								{printf("<ASSIGN>{0} "); }
 [;]								{printf("<EOS>{0} "); }
 [,]								{printf("<COMMA>{0} ");}
-[ /t/n]*						/* Eat up whitespaces */
+[ \t]							/* Eat up whitespaces */
 .								{printf("**E:%s** ", yytext); } 
 
 %%
