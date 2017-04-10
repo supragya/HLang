@@ -1,0 +1,4 @@
+declare $num = 10;
+declare $mapvar =20;
+declare map $mapsys;
+declare $var ="stringvalues", $var2=30;

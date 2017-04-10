@@ -1,0 +1,6 @@
+function foo{
+	declare $variable = $1;
+}
+function main{
+	declare $realtime = foo($nether, $noter, 40, "shreyansh");
+}
