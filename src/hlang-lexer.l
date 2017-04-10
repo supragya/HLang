@@ -21,7 +21,7 @@ int funccallopen = 0;
 [$][_a-zA-Z][_a-zA-Z0-9]+		{printf("<VARNAME>{%s} ", yytext+1); }
 [$][0-9]+						{printf("<ARGVAR>{%s} ", yytext+1);}
 ([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)	{printf("<NVAL>{%s} ", yytext); }
-["].*["]							{printf("<STR>{%s} ", yytext);}
+["].*["]							{printf("<STR>{%s} ", yytext+1);}
 [#][^*].*[^\n]					{printf("<SLCMNT>{%s}",yytext+1);}
 [{]								{printf("<BROPEN> ");}
 [}]								{printf("<BRCLOSE> ");}
@@ -39,13 +39,26 @@ int funccallopen = 0;
 <MLCMNT>"*#"					{printf("} ");
 								 BEGIN(INITIAL);}
 
-[a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} ",yytext); funccallopen = 1;}
-[)]								{funccallopen?printf("<FUNCCALLEND>{0} "):0; funccallopen = 0;}	
+"if"							{printf("<IF>{0} ");}
+"elif"							{printf("<ELIF>{0} ");}
+"else"							{printf("<ELSE>{0} ");}
+
+[a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARAMOPEN>{0} ",yytext);}
+[(]								{printf("<PARAMOPEN>{0} ");}
+[)]								{printf("<PARAMEND>{0} ");}	
+
+">"								{printf("<GT>{0} ");}
+"<"								{printf("<LT>{0} ");}
+"=="							{printf("<EQ>{0} ");}
+"!="|"<>"						{printf("<NQ>{0} ");}
+">="							{printf("<GE>{0} ");}
+"<="							{printf("<LE>{0} ");}
 
 [=]								{printf("<ASSIGN>{0} "); }
 [;]								{printf("<EOS>{0} "); }
 [,]								{printf("<COMMA>{0} ");}
 [ \t]							/* Eat up whitespaces */
+								/* [\n] */
 .								{printf("**E:%s** ", yytext); } 
 
 %%
@@ -53,13 +66,15 @@ int funccallopen = 0;
 int main(char **argv){
 	/* Debug welcome */
 	DEBUG?printf("+--------------------------\n"):0;
-	DEBUG?printf(" HLANG LEXER %0.2f\n", VERSION):0;
+	DEBUG?printf("|HLANG LEXER %0.2f\n", VERSION):0;
 	DEBUG?printf("+--------------------------\n"):0;
 	
 	/*Define testfiles */
 	char tests[][50]	=	{	"variable_declarations.hl",
 								"comments.hl",
 								"functions.hl",
+								"selections.hl",
+								"elastic_horse_regressions.hl",
 								""};
 	unsigned int i = 0;
 

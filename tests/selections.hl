@@ -1,0 +1,9 @@
+if ($dummyvar == 90){
+	declare $dums = 99;
+}
+elif ($dummyvar == 91){
+	declare map $dums;
+}
+else{
+	declare map $dums;
+}
