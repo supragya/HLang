@@ -11,9 +11,11 @@ The HLang interpreter just features a primitive lexer at the present moment with
 
 To build the lexer:
 
+    ```bash
     mkdir bin build headers
     flex -o build/lexer.c src/hlang-lexer.l
     cc -o bin/hlang-lexer.out build/lexer.c -lfl
+    ```
     
 To run the lexical tests
 
