@@ -11,10 +11,9 @@ The HLang interpreter just features a primitive lexer at the present moment with
 
 To build the lexer:
 
-    cd src
-    flex -o lexer.c hlang-lexer.l
-    cc lexer.c -lfl
+    flex -o build/lexer.c src/hlang-lexer.l
+    cc -o bin/hlang-lexer.out build/lexer.c -lfl
     
-To run the lexical tests,
+To run the lexical tests
 
-    ./a.out
+    ./bin/hlang-lexer.out

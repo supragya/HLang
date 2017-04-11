@@ -42,7 +42,7 @@
 %x MLCMNT FUNCTION STR SHELLECHO
 %{
 #include <string.h>
-#define TESTFOLDER "../tests/"
+#define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
 int funccallopen = 0;
