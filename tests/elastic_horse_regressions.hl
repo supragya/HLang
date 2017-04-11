@@ -1,15 +1,15 @@
 #!/scripts/HLang
 function main {
-declare $returnval[0]="<mkfile -s 2m /tmp/img >”;
-declare $returnval[1]="<file_bd /tmp/img fbd0 >”;
-declare $returnval[2]="<mkfat fbd0 >”;
-declare $returnval[3]="<mount /data fbd0 >”;
-declare $returnval[4]="<mkfile -s 1k trialfile >”;
-declare $returnval[5] = “< cp trialfile /data >”;
-declare $returnval[6] = “< unmount /data >”;
-declare $returnval[7] = “< mount /data fbd0 >”;
-declare $returnval[8] = “< ls | grep trialfile >”;
-declare $ctr = “0”;
+declare $returnval[0]="<mkfile -s 2m /tmp/img >";
+declare $returnval[1]="<file_bd /tmp/img fbd0 >";
+declare $returnval[2]="<mkfat fbd0 >";
+declare $returnval[3]="<mount /data fbd0 >";
+declare $returnval[4]="<mkfile -s 1k trialfile >";
+declare $returnval[5]="< cp trialfile /data >";
+declare $returnval[6]="< unmount /data >";
+declare $returnval[7]="< mount /data fbd0 >";
+declare $returnval[8]="< ls | grep trialfile >";
+declare $ctr = "0";
 while ($ctr != 8){
 	if ( < {$returnval[{$ctr}]} > != 0){
 		< echo Test failed >;

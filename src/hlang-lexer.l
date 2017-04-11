@@ -5,7 +5,7 @@
 
 
 %option noyywrap
-%x MLCMNT FUNCTION
+%x MLCMNT FUNCTION STR
 %{
 #include <string.h>
 #define TESTFOLDER "../tests/"
@@ -18,10 +18,12 @@ int funccallopen = 0;
 
 "declare"[ \t\n]*"map"			{printf("<MAPDECL>{0} ");}
 "declare"						{printf("<VARDECL>{0} ");}
-[$][_a-zA-Z][_a-zA-Z0-9]+		{printf("<VARNAME>{%s} ", yytext+1); }
+[$][_a-zA-Z][_a-zA-Z0-9]+|[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{printf("<VARNAME>{%s} ", yytext+1); }
 [$][0-9]+						{printf("<ARGVAR>{%s} ", yytext+1);}
 ([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)	{printf("<NVAL>{%s} ", yytext); }
-["].*["]							{printf("<STR>{%s} ", yytext+1);}
+["]								{printf("<STR>{"); BEGIN STR;}
+<STR>["]						{printf("} "); BEGIN INITIAL;}
+<STR>.							{printf(yytext);}/*eat up*/
 [#][^*].*[^\n]					{printf("<SLCMNT>{%s}",yytext+1);}
 [{]								{printf("<BROPEN> ");}
 [}]								{printf("<BRCLOSE> ");}
@@ -44,8 +46,8 @@ int funccallopen = 0;
 "else"							{printf("<ELSE>{0} ");}
 
 [a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARAMOPEN>{0} ",yytext);}
-[(]								{printf("<PARAMOPEN>{0} ");}
-[)]								{printf("<PARAMEND>{0} ");}	
+[(]								{printf("<PARANOPEN>{0} ");}
+[)]								{printf("<PARANEND>{0} ");}	
 
 ">"								{printf("<GT>{0} ");}
 "<"								{printf("<LT>{0} ");}
