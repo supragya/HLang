@@ -1,7 +1,41 @@
 /* HLANG INTERPRETER development stage 0 
  * created by SUPRAGYA RAJ
- * basic lexing done here
  */
+
+/* DEFINING TYPES:
+
+	MAPDECL:	Declare map variable
+	VARDECL:	Declare general variable
+	VARNAME:	Variable name
+	MELNAME:	Map element name
+	ARGVAR :	Argument variable
+	NVAL   :	Numeric type
+	STR    :	String
+	SLCMNT :	Single Line comments
+	MLCMNT :	Multi Line comments
+	BROPEN :	Brace open
+	BRCLOSE:	Brace close
+	SHELLECHO:	Shell echo to the shell terminal
+	FUNC   :	Function
+	IF     :	if selection construct
+	ELIF   :	else if selection construct
+	ELSE   :	else selection construct
+	WHILE  :	while iterative construct
+	EOS    :	End of statement
+	PARANOPEN:	Paranthesis open
+	PARANCLOSE:	Paranthesis close
+	ASSIGN :	Assignment operator
+	FUNCCALL:	Function call
+	COMMA  :	comma
+	GT     :	Relational operator greater than
+	LT     :	Relational operator lesser than
+	EQ     :	Relational operator equal to
+	NQ     :	Relational operator not equal to
+	GE     :	Relational operator greater than or equal to
+	LE     :	Relational operator lesser than or equal to
+
+	Anything that does not matches the above is shown as **E{string}** during tests
+*/
 
 
 %option noyywrap
@@ -51,7 +85,7 @@ int funccallopen = 0;
 "else"							{printf("<ELSE>{0} ");}
 "while"							{printf("<WHILE>{0} ");}
 
-[a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARAMOPEN>{0} ",yytext);}
+[a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARANOPEN>{0} ",yytext);}
 [(]								{printf("<PARANOPEN>{0} ");}
 [)]								{printf("<PARANCLOSE>{0} ");}	
 
