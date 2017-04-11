@@ -2,66 +2,71 @@
  * created by SUPRAGYA RAJ
  */
 
-/* DEFINING TYPES:
-
-	MAPDECL:	Declare map variable
-	VARDECL:	Declare general variable
-	VARNAME:	Variable name
-	MELNAME:	Map element name
-	ARGVAR :	Argument variable
-	NVAL   :	Numeric type
-	STR    :	String
-	SLCMNT :	Single Line comments
-	MLCMNT :	Multi Line comments
-	BROPEN :	Brace open
-	BRCLOSE:	Brace close
-	SHELLECHO:	Shell echo to the shell terminal
-	FUNC   :	Function
-	IF     :	if selection construct
-	ELIF   :	else if selection construct
-	ELSE   :	else selection construct
-	WHILE  :	while iterative construct
-	EOS    :	End of statement
-	PARANOPEN:	Paranthesis open
-	PARANCLOSE:	Paranthesis close
-	ASSIGN :	Assignment operator
-	FUNCCALL:	Function call
-	COMMA  :	comma
-	GT     :	Relational operator greater than
-	LT     :	Relational operator lesser than
-	EQ     :	Relational operator equal to
-	NQ     :	Relational operator not equal to
-	GE     :	Relational operator greater than or equal to
-	LE     :	Relational operator lesser than or equal to
-
-	Anything that does not matches the above is shown as **E{string}** during tests
-*/
-
-
 %option noyywrap
-%x MLCMNT FUNCTION STR SHELLECHO
+%x _MLCMNT _FUNCTION _STRING _SHELLECHO
 %{
 #include <string.h>
 #define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
 int funccallopen = 0;
+char yylval[2000];
+
+
+/* DEFINING TYPES 
+ * Anything that does not matches the above is shown as **E{string}** during tests
+ */
+
+enum yytokentype{
+	MAPDECL		=	601,
+	VARDECL		=	602,
+	VARNAME		=	603,
+	MELNAME		=	604,
+	ARGVAR		=	605,
+	NVAL		=	606,
+	STRING		=	607,
+	SLCMNT		=	608,
+	MLCMNT		=	609,
+	BROPEN		=	610,
+	BRCLOSE		=	611,
+	SHELLECHO	=	612,
+	FUNC		=	613,
+	IF			=	614,
+	ELIF		=	615,
+	ELSE		=	616,
+	WHILE		=	617,
+	EOS			=	618,
+	PARANOPEN	=	619,
+	PARANCLOSE	=	620,
+	ASSIGN		=	621,
+	FUNCCALL	=	622,
+	COMMA		=	623,
+	GT			=	624,
+	LT			=	625,
+	EQ			=	626,
+	NQ			=	627,
+	GE			=	628,
+	LE			=	629
+};
+
 %}
 
 %%
 
-"declare"[ \t\n]*"map"			{printf("<MAPDECL>{0} ");}
-"declare"						{printf("<VARDECL>{0} ");}
-[$][_a-zA-Z][_a-zA-Z0-9]+		{printf("<VARNAME>{%s} ", yytext+1); }
-[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{printf("<MELNAME>{%s} ", yytext+1); }
-[$][0-9]+						{printf("<ARGVAR>{%s} ", yytext+1);}
-([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)	{printf("<NVAL>{%s} ", yytext); }
-["]								{printf("<STR>{"); BEGIN STR;}
-<STR>["]						{printf("} "); BEGIN INITIAL;}
-<STR>.							{printf(yytext);}/*eat up*/
-[#][^*].*[^\n]					{printf("<SLCMNT>{%s}",yytext+1);}
-[{]								{printf("<BROPEN> ");}
-[}]								{printf("<BRCLOSE> ");}
+"declare"[ \t\n]*"map"						{strcpy(yylval, "0"); return MAPDECL;}
+"declare"									{strcpy(yylval, "0"); return VARDECL;}
+[$][_a-zA-Z][_a-zA-Z0-9]+					{strcpy(yylval, yytext+1); return VARNAME;}
+[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{strcpy(yylval, yytext+1); return MELNAME;}
+[$][0-9]+									{strcpy(yylval, yytext+1); return ARGVAR;}
+([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{strcpy(yylval, yytext); return NVAL;}
+
+["]											{strclean(yylval); BEGIN _STRING;}
+<_STRING>["]								{BEGIN INITIAL; return STRING}
+<_STRING>.									{strappend(yylval, yytext);}/*eat up*/
+
+[#][^*].*[^\n]								{strcpy(yylval, yytext+1); return SLCMNT;}
+[{]											{strcpy(yylval, "0"); return BROPEN;}
+[}]											{strcpy(yylval, "0"); return BRCLOSE;}
 
 "<%"							{printf("<SHELLECHO>{"); BEGIN SHELLECHO;}
 <SHELLECHO>">"					{printf("} "); BEGIN INITIAL;}
