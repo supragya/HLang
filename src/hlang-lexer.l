@@ -5,7 +5,7 @@
 
 
 %option noyywrap
-%x MLCMNT FUNCTION STR
+%x MLCMNT FUNCTION STR SHELLECHO
 %{
 #include <string.h>
 #define TESTFOLDER "../tests/"
@@ -18,7 +18,8 @@ int funccallopen = 0;
 
 "declare"[ \t\n]*"map"			{printf("<MAPDECL>{0} ");}
 "declare"						{printf("<VARDECL>{0} ");}
-[$][_a-zA-Z][_a-zA-Z0-9]+|[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{printf("<VARNAME>{%s} ", yytext+1); }
+[$][_a-zA-Z][_a-zA-Z0-9]+		{printf("<VARNAME>{%s} ", yytext+1); }
+[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{printf("<MELNAME>{%s} ", yytext+1); }
 [$][0-9]+						{printf("<ARGVAR>{%s} ", yytext+1);}
 ([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)	{printf("<NVAL>{%s} ", yytext); }
 ["]								{printf("<STR>{"); BEGIN STR;}
@@ -27,6 +28,10 @@ int funccallopen = 0;
 [#][^*].*[^\n]					{printf("<SLCMNT>{%s}",yytext+1);}
 [{]								{printf("<BROPEN> ");}
 [}]								{printf("<BRCLOSE> ");}
+
+"<%"							{printf("<SHELLECHO>{"); BEGIN SHELLECHO;}
+<SHELLECHO>">"					{printf("} "); BEGIN INITIAL;}
+<SHELLECHO>.					{printf(yytext);}								
 
 "function"						{printf("<FUNC>");
 								 BEGIN FUNCTION;}
@@ -44,10 +49,11 @@ int funccallopen = 0;
 "if"							{printf("<IF>{0} ");}
 "elif"							{printf("<ELIF>{0} ");}
 "else"							{printf("<ELSE>{0} ");}
+"while"							{printf("<WHILE>{0} ");}
 
 [a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARAMOPEN>{0} ",yytext);}
 [(]								{printf("<PARANOPEN>{0} ");}
-[)]								{printf("<PARANEND>{0} ");}	
+[)]								{printf("<PARANCLOSE>{0} ");}	
 
 ">"								{printf("<GT>{0} ");}
 "<"								{printf("<LT>{0} ");}
