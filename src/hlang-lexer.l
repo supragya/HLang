@@ -101,8 +101,7 @@ int has_lval(int);
 [=]							{return ASSIGN;}
 [;]							{return EOS;}
 [,]							{return COMMA;}
-[ \t]							/* Eat up whitespaces */
-							/* [\n] NEWLINE REMOVER TO BE INSERTED */
+[ \t\n]							/* Eat up whitespaces */
 .							{return ERR; } 
 
 %%
@@ -143,16 +142,16 @@ int main(char **argv){
 			if(has_lval(tok)){
 				printf(yylval);
 			}
-			printf("\n ");
+			printf("\n");
 			if(tok == FUNC){
 				printf("%d", PARANOPEN);
 			}
 		}	
-		DEBUG?printf(">>>Hlang lexer completes\n"):0;
-		return 0;
 		/* Increment the counter */
 		i++;
 	}
+	DEBUG?printf(">>>HLang lexer completes\n"):0;
+	return 0;
 }
 
 void strclean(char *str){
