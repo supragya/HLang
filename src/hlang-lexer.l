@@ -113,20 +113,46 @@ int main(char **argv){
 	DEBUG?printf("|HLANG LEXER %0.2f\n", VERSION):0;
 	DEBUG?printf("+--------------------------\n"):0;
 	
-	/* Lexing done here */
+	/*Define testfiles */
+	char tests[][50]	=	{	"variable_declarations.hl",
+								"comments.hl",
+								"functions.hl",
+								"selections.hl",
+								"elastic_horse_regressions.hl",
+								""};
+	unsigned int i = 0;
 	int tok;
-	while(tok = yylex()){
-		printf("%d ", tok);
-		if(has_lval(tok)){
-			printf(yylval);
+	/* Test file parsing */
+	while(strcmp(tests[i], "")){
+
+		/* Absolutize file name */
+		char workfile[200] = TESTFOLDER;
+		strcat(workfile, tests[i]);
+
+		/* Opening the test file for parsing */
+		if(!(yyin = fopen(workfile, "r"))){
+			DEBUG?printf(">>>Error opening %s, aborting\n", workfile):0;
+			perror(argv[1]);
+			return 1;
 		}
-		printf("\n ");
-		if(tok == FUNC){
-			printf("%d", PARANOPEN);
-		}
-	}	
-	DEBUG?printf(">>>Hlang lexer completes\n"):0;
-	return 0;
+		DEBUG?printf(">>>%s opened successfully\n", workfile):0;
+
+		/* Start lexical analysis on the file */
+		while(tok = yylex()){
+			printf("%d ", tok);
+			if(has_lval(tok)){
+				printf(yylval);
+			}
+			printf("\n ");
+			if(tok == FUNC){
+				printf("%d", PARANOPEN);
+			}
+		}	
+		DEBUG?printf(">>>Hlang lexer completes\n"):0;
+		return 0;
+		/* Increment the counter */
+		i++;
+	}
 }
 
 void strclean(char *str){
