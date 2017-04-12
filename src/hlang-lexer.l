@@ -43,11 +43,13 @@ enum yytokentype{
 	EQ		=	626,
 	NQ		=	627,
 	GE		=	628,
-	LE		=	629
+	LE		=	629,
+	ERR		=	630
 };
 
-void strclean(char *str);
-void strcpy(char *str1, char *str2);
+void strclean(char *);
+void strappend(char *, char *);
+int has_lval(int);
 %}
 
 %%
@@ -60,7 +62,7 @@ void strcpy(char *str1, char *str2);
 ([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{strcpy(yylval, yytext); return NVAL;}
 
 ["]							{strclean(yylval); BEGIN _STRING;}
-<_STRING>["]						{BEGIN INITIAL; return STRING}
+<_STRING>["]						{BEGIN INITIAL; return STRING;}
 <_STRING>.						{strappend(yylval, yytext);}
 
 [#][^*].*[^\n]						/*Single line comments, do nothing */
@@ -92,7 +94,7 @@ void strcpy(char *str1, char *str2);
 ">"							{return GT;}
 "<"							{return LT;}
 "=="							{return EQ;}
-"!="|"<>"						{return NE;}
+"!="|"<>"						{return NQ;}
 ">="							{return GE;}
 "<="							{return LE;}
 
@@ -132,11 +134,27 @@ void strclean(char *str){
 	str[0] = '\0';	
 }
 
-void strappend(char *str1, char *str *str2){
+void strappend(char *str1, char *str2){
+	int str1addpoint = 0, str2len = 0;
+	while(str1[str1addpoint++] != '\0');
+	while(str2[str2len++] != '\0');
+	str2len--;
 	
+	int i;
+	for(i = 0; i<str2len; i++){
+		str1[str1addpoint+i] = str2[i];
+	}
+	str1[str1addpoint+str2len] = '\0';
 }
 
-
+int has_lval(int tokentype){
+	int lvaltypes[] = {VARNAME, MELNAME, ARGVAR, NVAL, STRING, SHELLECHO, FUNC, FUNCCALL, -1};
+	int i;
+	for(i = 0;lvaltypes[i] != -1;i++)
+		if(tokentype == lvaltypes[i]) 
+			return 1;
+	return 0;
+}
 
 
 
