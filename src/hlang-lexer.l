@@ -9,7 +9,6 @@
 #define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
-int funccallopen = 0;
 char yylval[2000];
 
 
@@ -25,88 +24,84 @@ enum yytokentype{
 	ARGVAR		=	605,
 	NVAL		=	606,
 	STRING		=	607,
-	SLCMNT		=	608,
-	MLCMNT		=	609,
 	BROPEN		=	610,
 	BRCLOSE		=	611,
 	SHELLECHO	=	612,
 	FUNC		=	613,
-	IF			=	614,
+	IF		=	614,
 	ELIF		=	615,
 	ELSE		=	616,
 	WHILE		=	617,
-	EOS			=	618,
+	EOS		=	618,
 	PARANOPEN	=	619,
 	PARANCLOSE	=	620,
 	ASSIGN		=	621,
 	FUNCCALL	=	622,
 	COMMA		=	623,
-	GT			=	624,
-	LT			=	625,
-	EQ			=	626,
-	NQ			=	627,
-	GE			=	628,
-	LE			=	629
+	GT		=	624,
+	LT		=	625,
+	EQ		=	626,
+	NQ		=	627,
+	GE		=	628,
+	LE		=	629
 };
 
+void strclean(char *str);
+void strcpy(char *str1, char *str2);
 %}
 
 %%
 
-"declare"[ \t\n]*"map"						{strcpy(yylval, "0"); return MAPDECL;}
-"declare"									{strcpy(yylval, "0"); return VARDECL;}
-[$][_a-zA-Z][_a-zA-Z0-9]+					{strcpy(yylval, yytext+1); return VARNAME;}
-[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"	{strcpy(yylval, yytext+1); return MELNAME;}
-[$][0-9]+									{strcpy(yylval, yytext+1); return ARGVAR;}
+"declare"[ \t\n]*"map"					{strclean(yylval); return MAPDECL;}
+"declare"						{strclean(yylval); return VARDECL;}
+[$][_a-zA-Z][_a-zA-Z0-9]+				{strcpy(yylval, yytext+1); return VARNAME;}
+[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"		{strcpy(yylval, yytext+1); return MELNAME;}
+[$][0-9]+						{strcpy(yylval, yytext+1); return ARGVAR;}
 ([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{strcpy(yylval, yytext); return NVAL;}
 
-["]											{strclean(yylval); BEGIN _STRING;}
-<_STRING>["]								{BEGIN INITIAL; return STRING}
-<_STRING>.									{strappend(yylval, yytext);}/*eat up*/
+["]							{strclean(yylval); BEGIN _STRING;}
+<_STRING>["]						{BEGIN INITIAL; return STRING}
+<_STRING>.						{strappend(yylval, yytext);}
 
-[#][^*].*[^\n]								{strcpy(yylval, yytext+1); return SLCMNT;}
-[{]											{strcpy(yylval, "0"); return BROPEN;}
-[}]											{strcpy(yylval, "0"); return BRCLOSE;}
+[#][^*].*[^\n]						/*Single line comments, do nothing */
+[{]							{strclean(yylval); return BROPEN;}
+[}]							{strclean(yylval); return BRCLOSE;}
 
-"<%"							{printf("<SHELLECHO>{"); BEGIN SHELLECHO;}
-<SHELLECHO>">"					{printf("} "); BEGIN INITIAL;}
-<SHELLECHO>.					{printf(yytext);}								
+"<%"							{strclean(yylval); BEGIN _SHELLECHO;}
+<_SHELLECHO>">"						{BEGIN INITIAL; return SHELLECHO;}
+<_SHELLECHO>.						{strappend(yylval, yytext);}								
 
-"function"						{printf("<FUNC>");
-								 BEGIN FUNCTION;}
-<FUNCTION>[ \t\n]+				 /*Eat these up */
-<FUNCTION>[a-zA-Z][a-zA-Z0-9]*	{printf("{%s} ", yytext);
-								 BEGIN INITIAL;}
+"function"						{strclean(yylval); BEGIN _FUNCTION;}
+<_FUNCTION>[ \t\n]+					 /*Eat these up */
+<_FUNCTION>[a-zA-Z][a-zA-Z0-9]*				{strappend(yylval, yytext); BEGIN INITIAL;}
 
-"#*"							{printf("<MLCMNT>{");
-								 BEGIN MLCMNT;}
-<MLCMNT>([^*]|\n)+|.			{printf(yytext);}
-<MLCMNT><<EOF>>					{printf("[Unterminated MLCMNT]"); return 0;}
-<MLCMNT>"*#"					{printf("} ");
-								 BEGIN(INITIAL);}
+"#*"							{BEGIN _MLCMNT;}
+<_MLCMNT>([^*]|\n)+|.					/* Do nothing */
+<_MLCMNT><<EOF>>					/* Error, but treat as if nothing happened */
+<_MLCMNT>"*#"						{BEGIN INITIAL;}
 
-"if"							{printf("<IF>{0} ");}
-"elif"							{printf("<ELIF>{0} ");}
-"else"							{printf("<ELSE>{0} ");}
-"while"							{printf("<WHILE>{0} ");}
+"if"							{return IF;}
+"elif"							{return ELIF;}
+"else"							{return ELSE;}
+"while"							{return WHILE;}
 
-[a-zA-Z][a-zA-Z0-9]*"("			{printf("<FUNCCALL>{%s} <PARANOPEN>{0} ",yytext);}
-[(]								{printf("<PARANOPEN>{0} ");}
-[)]								{printf("<PARANCLOSE>{0} ");}	
+[a-zA-Z][a-zA-Z0-9]*"("					{return FUNC;}
+[(]							{return PARANOPEN;}
+[)]							{return PARANCLOSE;}	
 
-">"								{printf("<GT>{0} ");}
-"<"								{printf("<LT>{0} ");}
-"=="							{printf("<EQ>{0} ");}
-"!="|"<>"						{printf("<NQ>{0} ");}
-">="							{printf("<GE>{0} ");}
-"<="							{printf("<LE>{0} ");}
+">"							{return GT;}
+"<"							{return LT;}
+"=="							{return EQ;}
+"!="|"<>"						{return NE;}
+">="							{return GE;}
+"<="							{return LE;}
 
-[=]								{printf("<ASSIGN>{0} "); }
-[;]								{printf("<EOS>{0} "); }
-[,]								{printf("<COMMA>{0} ");}
+[=]							{return ASSIGN;}
+[;]							{return EOS;}
+[,]							{return COMMA;}
 [ \t]							/* Eat up whitespaces */
-								/* [\n] */
-.								{printf("**E:%s** ", yytext); } 
+							/* [\n] NEWLINE REMOVER TO BE INSERTED */
+.							{return ERR; } 
 
 %%
 
@@ -116,39 +111,36 @@ int main(char **argv){
 	DEBUG?printf("|HLANG LEXER %0.2f\n", VERSION):0;
 	DEBUG?printf("+--------------------------\n"):0;
 	
-	/*Define testfiles */
-	char tests[][50]	=	{	"variable_declarations.hl",
-								"comments.hl",
-								"functions.hl",
-								"selections.hl",
-								"elastic_horse_regressions.hl",
-								""};
-	unsigned int i = 0;
-
-	/* Test file parsing */
-	while(strcmp(tests[i], "")){
-
-		/* Absolutize file name */
-		char workfile[200] = TESTFOLDER;
-		strcat(workfile, tests[i]);
-
-		/* Opening the test file for parsing */
-		if(!(yyin = fopen(workfile, "r"))){
-			DEBUG?printf(">>>Error opening %s, aborting\n", workfile):0;
-			perror(argv[1]);
-			return 1;
+	/* Lexing done here */
+	int tok;
+	while(tok = yylex()){
+		printf("%d ", tok);
+		if(has_lval(tok)){
+			printf(yylval);
 		}
-		DEBUG?printf(">>>%s opened successfully\n", workfile):0;
-
-		/* Start lexical analysis on the file */
-		DEBUG?printf("\n"):0;
-		yylex();
-		DEBUG?printf("\n\n"):0;
-
-		/* Increment the counter */
-		i++;
-	}
-
+		printf("\n ");
+		if(tok == FUNC){
+			printf("%d", PARANOPEN);
+		}
+	}	
 	DEBUG?printf(">>>Hlang lexer completes\n"):0;
 	return 0;
 }
+
+void strclean(char *str){
+	/*Cleans a given string, just adds '\0' in the 0th position */
+	str[0] = '\0';	
+}
+
+void strappend(char *str1, char *str *str2){
+	
+}
+
+
+
+
+
+
+
+
+
