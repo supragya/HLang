@@ -87,7 +87,7 @@ int has_lval(int);
 "else"							{return ELSE;}
 "while"							{return WHILE;}
 
-[a-zA-Z][a-zA-Z0-9]*"("					{return FUNC;}
+[a-zA-Z][a-zA-Z0-9]*"("					{strcpy(yylval, yytext); return FUNC;}
 [(]							{return PARANOPEN;}
 [)]							{return PARANCLOSE;}	
 
@@ -140,11 +140,12 @@ int main(char **argv){
 		while(tok = yylex()){
 			printf("%d ", tok);
 			if(has_lval(tok)){
+				printf(" with val ");
 				printf(yylval);
 			}
 			printf("\n");
 			if(tok == FUNC){
-				printf("%d", PARANOPEN);
+				printf("%d\n", PARANOPEN);
 			}
 		}	
 		/* Increment the counter */
