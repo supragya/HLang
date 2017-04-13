@@ -66,8 +66,8 @@ int has_lval(int);
 <_STRING>.						{yyappend(yytext);}
 
 [#][^*].*[^\n]						/*Single line comments, do nothing */
-[{]							{yyclean(); return BROPEN;}
-[}]							{yyclean(); return BRCLOSE;}
+[{]							{return BROPEN;}
+[}]							{return BRCLOSE;}
 
 "<%"							{yyclean(); BEGIN _SHELLECHO;}
 <_SHELLECHO>">"						{BEGIN INITIAL; return SHELLECHO;}
@@ -87,7 +87,7 @@ int has_lval(int);
 "else"							{return ELSE;}
 "while"							{return WHILE;}
 
-[a-zA-Z][a-zA-Z0-9]*"("					{strcpy(datastring, yytext); return FUNC;}
+[a-zA-Z][a-zA-Z0-9]*"("					{yyclean(); yyappend(yytext); return FUNC;}
 [(]							{return PARANOPEN;}
 [)]							{return PARANCLOSE;}	
 
@@ -139,14 +139,14 @@ int main(char **argv){
 
 		/* Start lexical analysis on the file */
 		while(tok = yylex()){
-			printf("%d ", tok);
-			//if(has_lval(tok)){
-				printf(" with val ");
-				printf(datastring);
-			//}
-			printf("\n");
+			DEBUG?printf("%d ", tok):0;
+			if(has_lval(tok)){
+				DEBUG?printf(" with val "):0;
+				DEBUG?printf("%s",datastring):0;
+			}
+			DEBUG?printf("\n"):0;
 			if(tok == FUNC){
-				printf("%d\n", PARANOPEN);
+				DEBUG?printf("%d\n", PARANOPEN):0;
 			}
 		}	
 		/* Increment the counter */
@@ -172,7 +172,6 @@ void yyappend(char *str){
 		datastring[yyaddpoint+i] = str[i];
 	}
 	datastring[yyaddpoint+strlen] = '\0';
-	printf(" %s |", datastring);
 }
 
 int has_lval(int tokentype){
