@@ -1,51 +1,17 @@
-/* HLANG INTERPRETER development stage 0 
- * created by SUPRAGYA RAJ
+/* HLang Lexer Flex 
+ * created by Supragya Raj
  */
 
 %option noyywrap
 %x _MLCMNT _FUNCTION _STRING _SHELLECHO
 %{
 #include <string.h>
+#include "../headers/hlang-parser.h"
 #define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
-char *datastring;
-
-
-/* DEFINING TYPES 
- * Anything that does not matches the above is shown as **E{string}** during tests
- */
-
-enum yytokentype{
-	MAPDECL		=	601,
-	VARDECL		=	602,
-	VARNAME		=	603,
-	MELNAME		=	604,
-	ARGVAR		=	605,
-	NVAL		=	606,
-	STRING		=	607,
-	BROPEN		=	610,
-	BRCLOSE		=	611,
-	SHELLECHO	=	612,
-	FUNC		=	613,
-	IF		=	614,
-	ELIF		=	615,
-	ELSE		=	616,
-	WHILE		=	617,
-	EOS		=	618,
-	PARANOPEN	=	619,
-	PARANCLOSE	=	620,
-	ASSIGN		=	621,
-	FUNCCALL	=	622,
-	COMMA		=	623,
-	GT		=	624,
-	LT		=	625,
-	EQ		=	626,
-	NQ		=	627,
-	GE		=	628,
-	LE		=	629,
-	ERR		=	630
-};
+#define DATABUFLEN 2000
+char datastring[DATABUFLEN];
 
 void yyclean();
 void yyappend(char *);
@@ -106,7 +72,7 @@ int has_lval(int);
 
 %%
 
-int main(char **argv){
+int min(char **argv){
 	/* Debug welcome */
 	DEBUG?printf("+--------------------------\n"):0;
 	DEBUG?printf("|HLANG LEXER %0.2f\n", VERSION):0;
@@ -119,7 +85,6 @@ int main(char **argv){
 								"selections.hl",
 								"elastic_horse_regressions.hl",
 								""};
-	datastring = malloc(sizeof(char)*2000);
 	unsigned int i = 0;
 	int tok;
 	/* Test file parsing */
