@@ -6,7 +6,7 @@
 %x _MLCMNT _FUNCTION _STRING _SHELLECHO
 %{
 #include <string.h>
-#include "../headers/hlang-parser.h"
+#include "../headers/buildtime_hlang-parser.h"
 #define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
