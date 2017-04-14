@@ -12,7 +12,7 @@
 #define VERSION 0.01
 #define DEBUG 1
 #define DATABUFLEN 2000
-char datastring[DATABUFLEN];
+char *yylval;
 
 void yyclean();
 void yyappend(char *);
@@ -77,26 +77,26 @@ int set_read_file(char *filename){
 	printf("called setread\n");
 	if(!(yyin = fopen(filename, "r")))
 		return 1;
+	yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
 	return 0;
 }
 
 void yyclean(){
 	/*Cleans a given string, just adds '\0' in the 0th position */
-	datastring[0] = '\0';	
+	yylval[0] = '\0';	
 }
 
 void yyappend(char *str){
-	int yyaddpoint = 0, strlen = 0;
-	while(datastring[yyaddpoint++] != '\0');
-	yyaddpoint--;
+	int addpoint = 0, strlen = 0;
+	while(yylval[addpoint++] != '\0');
+	addpoint--;
 	while(str[strlen++] != '\0');
 	strlen--;
 	int i;
 	for(i = 0; i<strlen; i++){
-		datastring[yyaddpoint+i] = str[i];
+		yylval[addpoint+i] = str[i];
 	}
-	datastring[yyaddpoint+strlen] = '\0';
-	printf("yyclean was called\n");
+	yylval[addpoint+strlen] = '\0';
 }
 
 int has_lval(int tokentype){

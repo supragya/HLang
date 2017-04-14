@@ -9,6 +9,8 @@
 int yyerror(char *);
 %}
 
+%define api.value.type {char *}
+
 /* Terminals */
 %token	MAPDECL	VARDECL	VARNAME	MELNAME	ARGVAR
 %token	NVAL	STRING	BROPEN	BRCLOSE	SHELLECHO
@@ -20,15 +22,40 @@ int yyerror(char *);
 
 %%
 
-start:	
-	|start VARDECL EOL 	{printf("%d\n", $1);}
+input:
+	%empty
+	|input line 	
+	;
+
+line:	stmt EOS
+	;
+
+stmt:	VARDECL varlist
+	|MAPDECL maplist
+	;
+
+varlist:var
+	|varlist COMMA var
+	;
+
+maplist:mapvar
+	|maplist COMMA mapvar
+	;
+
+var:	VARNAME				{printf("varname ");}
+	|VARNAME ASSIGN STRING		{printf("assnvar %s", yylval);}
+	|VARNAME ASSIGN NVAL
+	;
+
+mapvar:	VARNAME
 	;
 %%
 
 int main(char **argv){
+	yylval = malloc(sizeof(char)*2000);
 	if(!set_read_file("../tests/variable_declaration.hl"))
 		return 1;
-	yyparse();
+	return yyparse();
 }
 
 int yyerror(char *s){
