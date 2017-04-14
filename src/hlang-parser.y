@@ -26,8 +26,8 @@ start:
 %%
 
 int main(char **argv){
-	printf("We are in danger");
-	printf(" |%d| ", has_lval(STRING));
+	if(!set_read_file("../tests/variable_declaration.hl"))
+		return 1;
 	yyparse();
 }
 

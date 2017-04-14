@@ -73,7 +73,10 @@ int has_lval(int);
 
 %%
 
-int min(char **argv){
+int set_read_file(char *filename){
+	printf("called setread\n");
+	if(!(yyin = fopen(filename, "r")))
+		return 1;
 	return 0;
 }
 

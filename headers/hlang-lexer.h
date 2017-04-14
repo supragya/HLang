@@ -1,1 +1,1 @@
-extern int has_lval(int);
+extern int set_read_file(char *);
