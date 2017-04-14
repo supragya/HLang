@@ -43,8 +43,8 @@ maplist:mapvar
 	;
 
 var:	VARNAME				{printf("varname ");}
-	|VARNAME ASSIGN STRING		{printf("assnvar %s", yylval);}
-	|VARNAME ASSIGN NVAL
+	|VARNAME ASSIGN STRING		{printf("ass_nvar %s ", yylval);}
+	|VARNAME ASSIGN NVAL		{printf("ass_svar %s ", yylval);}
 	;
 
 mapvar:	VARNAME
@@ -53,8 +53,8 @@ mapvar:	VARNAME
 
 int main(char **argv){
 	yylval = malloc(sizeof(char)*2000);
-	if(!set_read_file("../tests/variable_declaration.hl"))
-		return 1;
+	if(set_read_file("tests/variable_declarations.hl"))
+		return 1; //Cannot find file
 	return yyparse();
 }
 

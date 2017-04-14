@@ -22,7 +22,7 @@ int has_lval(int);
 %%
 
 "declare"[ \t\n]*"map"					{return MAPDECL;}
-"declare"						{return VARDECL;}
+"declare"						{printf("declared ");return VARDECL;}
 [$][_a-zA-Z][_a-zA-Z0-9]+				{yyclean(); yyappend(yytext+1); return VARNAME;}
 [$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"		{yyclean(); yyappend(yytext+1); return MELNAME;}
 [$][0-9]+						{yyclean(); yyappend(yytext+1); return ARGVAR;}
@@ -74,7 +74,8 @@ int has_lval(int);
 %%
 
 int set_read_file(char *filename){
-	printf("called setread\n");
+	if(!fopen(filename, "r"))
+		printf("cannot find file");
 	if(!(yyin = fopen(filename, "r")))
 		return 1;
 	yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
@@ -105,6 +106,6 @@ int has_lval(int tokentype){
 	for(i = 0;lvaltypes[i] != -1;i++)
 		if(tokentype == lvaltypes[i]) 
 			return 1;
-	return 0;
+		return 0;
 }
 
