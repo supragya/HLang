@@ -1,3 +1,6 @@
 *.out
 *.o
 *.swp
+build/
+bin/
+headers/buildtime*
