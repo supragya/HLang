@@ -6,8 +6,9 @@
 %x _MLCMNT _FUNCTION _STRING _SHELLECHO
 %{
 #include <string.h>
-#include "../headers/buildtime_hlang-parser.h"
-#include "../headers/hlang-lexer.h"
+#include "buildtime_hlang-parser.h"
+#include "hlang-lexer.h"
+
 char *yylval;
 
 void yyclean();
