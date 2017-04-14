@@ -8,10 +8,6 @@
 #include <string.h>
 #include "../headers/buildtime_hlang-parser.h"
 #include "../headers/hlang-lexer.h"
-#define TESTFOLDER "tests/"
-#define VERSION 0.01
-#define DEBUG 1
-#define DATABUFLEN 2000
 char *yylval;
 
 void yyclean();

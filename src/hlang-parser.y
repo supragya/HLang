@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "../headers/buildtime_hlang-lexer.h"
 #include "../headers/hlang-lexer.h"
+#define DATABUFLEN 2000
 int yyerror(char *);
 %}
 
@@ -52,10 +53,28 @@ mapvar:	VARNAME
 %%
 
 int main(char **argv){
-	yylval = malloc(sizeof(char)*2000);
-	if(set_read_file("tests/variable_declarations.hl"))
-		return 1; //Cannot find file
-	return yyparse();
+	printf("+-------------------------------+\n");
+	printf("|       HLang Interpreter       |\n");
+	printf("+-------------------------------+\n");
+
+	yylval = malloc(sizeof(char)*DATABUFLEN);
+
+	char testset[][100] = {	"tests/variable_declarations.hl",
+				"tests/selections.hl",
+				"tests/functions.hl",
+				"tests/comments.hl",
+				"tests/elastic_horse_regressions.hl",
+				"" };
+	unsigned int i = 0;
+	while(strcmp(testset[i],"")){		
+		printf("\n>>>PARSING FILE \"%s\"+\n", testset[i]);
+		if(set_read_file(testset[i]))
+			return 1; //Cannot find file
+		else
+			yyparse();
+		i++;
+	}
+	printf("\n+-COMPLETE----------------------+\n");
 }
 
 int yyerror(char *s){
