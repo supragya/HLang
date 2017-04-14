@@ -7,14 +7,20 @@ HLang is a scripting language made primarily for becoming the main shell scripti
 
 Building HLang from source
 ----------------
-The HLang interpreter just features a primitive lexer at the present moment with no make possibilities. Hence, the compiling process is manual. To build HLang from source, download the code from the repository to a local machine, `cd` to the codebase and use the following commands:
+The HLang interpreter is at present a set of lexer and analyser system. To build HLang from source, download the code from the repository to a local machine, `cd` to the codebase and use the following commands:
 
-To build the lexer:
+To build the system:
 
-    mkdir bin build headers
-    flex -o build/lexer.c src/hlang-lexer.l
-    cc -o bin/hlang-lexer.out build/lexer.c -lfl
-    
-To run the lexical tests
+    make
 
-    ./bin/hlang-lexer.out
+To build the system, clean:
+
+    make clean
+
+To revert back to original sources:
+
+    make reset
+
+To run the interpreter
+
+    ./bin/hlang-interpreter
