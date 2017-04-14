@@ -1,11 +1,11 @@
-bin/hlang-interpreter:	src/main.c src/hlang-lexer.l src/hlang-parser.y
+bin/hlang-interpreter:	src/main.c src/variable_mgmt.c src/hlang-lexer.l src/hlang-parser.y
 	@echo "+------------------------------------+"
 	@echo "|  MAKE: HLang Interpreter Builder   |"
 	@echo "+------------------------------------+"
 	-mkdir build/ headers/ bin/
 	bison --defines=headers/buildtime_hlang-parser.h --output=build/hlang-parser.c src/hlang-parser.y --language=c
 	flex --header-file=headers/buildtime_hlang-lexer.h -o build/hlang-lexer.c src/hlang-lexer.l
-	gcc -o $@ src/main.c build/hlang-parser.c build/hlang-lexer.c -lfl -I headers/ -std=gnu99
+	gcc -o $@ src/main.c src/variable_mgmt.c build/hlang-parser.c build/hlang-lexer.c -lfl -I headers/ -std=gnu99
 
 .PHONY:	clean reset
 clean:	
@@ -14,5 +14,5 @@ clean:
 	$(MAKE)
 reset:
 	@echo "+--Reset to bare sources------------+"
-	@echo "Any errors (if any) suggesting files not found are okay"
+	@echo "Any errors suggesting files not found are okay"
 	@-rm -r build/ headers/buildtime* bin 

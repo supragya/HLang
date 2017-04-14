@@ -4,9 +4,11 @@
 
 %{
 #include <stdio.h>
-#include "../headers/buildtime_hlang-lexer.h"
-#include "../headers/hlang-lexer.h"
-int yyerror(char *);
+#include "buildtime_hlang-lexer.h"
+#include "hlang-lexer.h"
+#include "hlang-parser.h"
+#include "variable_mgmt.h"
+
 %}
 
 %define api.value.type {char *}
@@ -42,9 +44,9 @@ maplist:mapvar
 	|maplist COMMA mapvar
 	;
 
-var:	VARNAME				{printf("varname ");}
-	|VARNAME ASSIGN STRING		{printf("ass_nvar %s ", yylval);}
-	|VARNAME ASSIGN NVAL		{printf("ass_svar %s ", yylval);}
+var:	VARNAME				{printf("variablename %s\n",yylval); }
+	|var ASSIGN STRING		{printf("ass_nvar %s \n", yylval); }
+	|var ASSIGN NVAL		{printf("ass_svar %s \n", yylval); }
 	;
 
 mapvar:	VARNAME

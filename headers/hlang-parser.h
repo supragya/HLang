@@ -1,0 +1,1 @@
+int yyerror(char *s);

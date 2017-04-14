@@ -19,7 +19,7 @@ int has_lval(int);
 %%
 
 "declare"[ \t\n]*"map"					{return MAPDECL;}
-"declare"						{printf("declared ");return VARDECL;}
+"declare"						{return VARDECL;}
 [$][_a-zA-Z][_a-zA-Z0-9]+				{yyclean(); yyappend(yytext+1); return VARNAME;}
 [$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"		{yyclean(); yyappend(yytext+1); return MELNAME;}
 [$][0-9]+						{yyclean(); yyappend(yytext+1); return ARGVAR;}

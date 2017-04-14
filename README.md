@@ -1,9 +1,8 @@
 HLang
 =====
 
-HLang is a scripting language made primarily for becoming the main shell scripting language for [HelenOS](www.helenos.org). Currently the system is under development, with only primitive lexing capabilities.
+HLang is a scripting language made primarily for becoming the main shell scripting language for [HelenOS](www.helenos.org). Currently the system is under development, with only primitive lexing and parsing capabilities.
 
-----------
 
 Building HLang from source
 ----------------

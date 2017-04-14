@@ -47,7 +47,7 @@ int main(char **argv){
 void welcome(){
 	printf("+-------------------------------+\n");
 	printf("|       HLang Interpreter       |\n");
-	printf("+-------------------------------+\n");
+	printf("+--------------------------0.1b-+\n");
 }
 
 void complete(){	
