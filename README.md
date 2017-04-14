@@ -23,4 +23,4 @@ To revert back to original sources:
 
 To run the interpreter
 
-    ./bin/hlang-interpreter
+    ./run
