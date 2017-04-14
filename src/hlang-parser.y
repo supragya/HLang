@@ -4,6 +4,9 @@
 
 %{
 #include <stdio.h>
+#include "../headers/buildtime_hlang-lexer.h"
+#include "../headers/hlang-lexer.h"
+int yyerror(char *);
 %}
 
 /* Terminals */
@@ -23,6 +26,8 @@ start:
 %%
 
 int main(char **argv){
+	printf("We are in danger");
+	printf(" |%d| ", has_lval(STRING));
 	yyparse();
 }
 

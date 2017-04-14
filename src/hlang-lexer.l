@@ -7,6 +7,7 @@
 %{
 #include <string.h>
 #include "../headers/buildtime_hlang-parser.h"
+#include "../headers/hlang-lexer.h"
 #define TESTFOLDER "tests/"
 #define VERSION 0.01
 #define DEBUG 1
@@ -73,51 +74,6 @@ int has_lval(int);
 %%
 
 int min(char **argv){
-	/* Debug welcome */
-	DEBUG?printf("+--------------------------\n"):0;
-	DEBUG?printf("|HLANG LEXER %0.2f\n", VERSION):0;
-	DEBUG?printf("+--------------------------\n"):0;
-	
-	/*Define testfiles */
-	char tests[][50]	=	{	"variable_declarations.hl",
-								"comments.hl",
-								"functions.hl",
-								"selections.hl",
-								"elastic_horse_regressions.hl",
-								""};
-	unsigned int i = 0;
-	int tok;
-	/* Test file parsing */
-	while(strcmp(tests[i], "")){
-
-		/* Absolutize file name */
-		char workfile[200] = TESTFOLDER;
-		strcat(workfile, tests[i]);
-
-		/* Opening the test file for parsing */
-		if(!(yyin = fopen(workfile, "r"))){
-			DEBUG?printf(">>>Error opening %s, aborting\n", workfile):0;
-			perror(argv[1]);
-			return 1;
-		}
-		DEBUG?printf(">>>%s opened successfully\n", workfile):0;
-
-		/* Start lexical analysis on the file */
-		while(tok = yylex()){
-			DEBUG?printf("%d ", tok):0;
-			if(has_lval(tok)){
-				DEBUG?printf(" with val "):0;
-				DEBUG?printf("%s",datastring):0;
-			}
-			DEBUG?printf("\n"):0;
-			if(tok == FUNC){
-				DEBUG?printf("%d\n", PARANOPEN):0;
-			}
-		}	
-		/* Increment the counter */
-		i++;
-	}
-	DEBUG?printf(">>>HLang lexer completes\n"):0;
 	return 0;
 }
 
@@ -137,6 +93,7 @@ void yyappend(char *str){
 		datastring[yyaddpoint+i] = str[i];
 	}
 	datastring[yyaddpoint+strlen] = '\0';
+	printf("yyclean was called\n");
 }
 
 int has_lval(int tokentype){
