@@ -1,11 +1,7 @@
 function main{
-	if ($dummyvar == 90){
+	declare $dummyvar = "before";
+	if {==} {
 		declare $ifvar = 99;
 	}
-	elif ($dummyvar == 91){
-		declare map $elifvar;
-	}
-	else{
-		declare map $elsevar;
-	}
+	declare $nether = "after";
 }
