@@ -1,9 +1,11 @@
-if ($dummyvar == 90){
-	declare $dums = 99;
-}
-elif ($dummyvar == 91){
-	declare map $dums;
-}
-else{
-	declare map $dums;
+function main{
+	if ($dummyvar == 90){
+		declare $ifvar = 99;
+	}
+	elif ($dummyvar == 91){
+		declare map $elifvar;
+	}
+	else{
+		declare map $elsevar;
+	}
 }
