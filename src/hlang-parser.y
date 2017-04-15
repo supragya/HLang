@@ -24,12 +24,20 @@
 
 %%
 
-input:
-	%empty
-	|input line 	
+input:	%empty
+	|input function 			
 	;
 
-line:	stmt EOS
+function: functionname enclosement		
+	;
+
+functionname: FUNC			{printf("found function %s\n",yylval);}
+
+enclosement: BROPEN line BRCLOSE
+	;
+
+line:	%empty
+	|line stmt EOS
 	;
 
 stmt:	VARDECL varlist
@@ -45,8 +53,8 @@ maplist:mapvar
 	;
 
 var:	VARNAME				{printf("variablename %s\n",yylval); }
-	|var ASSIGN STRING		{printf("ass_nvar %s \n", yylval); }
-	|var ASSIGN NVAL		{printf("ass_svar %s \n", yylval); }
+	|var ASSIGN STRING		{printf("ass_svar %s \n", yylval); }
+	|var ASSIGN NVAL		{printf("ass_nvar %s \n", yylval); }
 	;
 
 mapvar:	VARNAME

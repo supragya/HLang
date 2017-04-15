@@ -39,7 +39,7 @@ int has_lval(int);
 
 "function"						{yyclean(); BEGIN _FUNCTION;}
 <_FUNCTION>[ \t\n]+					 /*Eat these up */
-<_FUNCTION>[a-zA-Z][a-zA-Z0-9]*				{yyappend(yytext); BEGIN INITIAL;}
+<_FUNCTION>[a-zA-Z][a-zA-Z0-9]*				{yyappend(yytext); BEGIN INITIAL; return FUNC;}
 
 "#*"							{BEGIN _MLCMNT;}
 <_MLCMNT>([^*]|\n)+|.					/* Do nothing */
