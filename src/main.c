@@ -6,6 +6,7 @@
 #include "buildtime_hlang-parser.h"
 #include "buildtime_hlang-lexer.h"
 #include "hlang-lexer.h"
+#include "version.h"
 #define DATABUFLEN 2000
 
 /* Function declarations */
@@ -45,9 +46,9 @@ int main(char **argv){
 }
 
 void welcome(){
-	printf("+-------------------------------+\n");
-	printf("|       HLang Interpreter       |\n");
-	printf("+--------------------------0.1b-+\n");
+	printf("+--------------------------------------------+\n");
+	printf("|      HLang Interpreter - %s   |\n", version_name[VERSION]);
+	printf("+-%s------------------------------------%s-+\n", WIP?"wip":"---", DRAFT );
 }
 
 void complete(){	
