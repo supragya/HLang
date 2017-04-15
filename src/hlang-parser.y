@@ -63,6 +63,7 @@ else:	%empty
 	;
 
 conditions: BROPEN relopr BRCLOSE
+	|BROPEN VARNAME relopr STRING BRCLOSE	{printf("<IFPOPENCLOSE>\n");}
 	;
 
 iterative: WHILE conditions enclosement
@@ -78,6 +79,7 @@ relopr:	GT
 
 stmt:	VARDECL varlist		{printf("<VARDECL|%s>\n", yylval);}
 	|MAPDECL maplist	{printf("<MAPDECL|%s>\n", yylval);}
+	|PARANOPEN VARNAME relopr STRING PARANCLOSE	{printf("<TSTPOPENCLOSE>\n");}
 	;
 
 varlist:var

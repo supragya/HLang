@@ -30,8 +30,8 @@ int has_lval(int);
 <_STRING>.						{yyappend(yytext);}
 
 [#][^*].*[^\n]						/*Single line comments, do nothing */
-"("							{printf("[paranopen]\n");return PARANOPEN;}
-")"							{printf("[paranclose]\n");return PARANCLOSE;}	
+[(]							{printf("[paranopen]\n");return PARANOPEN;}
+[)]							{printf("[paranclose]\n");return PARANCLOSE;}	
 [{]							{printf("[BROPEN]\n");return BROPEN;}
 [}]							{printf("[BRCLOSE]\n");return BRCLOSE;}
 
