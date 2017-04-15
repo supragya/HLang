@@ -4,7 +4,7 @@ HLang
 
 WIP: **ANGRY AXOLOTL release 0 draft 2**
 
-HLang is a scripting language made primarily for becoming the main shell scripting language for [HelenOS](www.helenos.org). Currently the system is under development, with only primitive lexing and parsing capabilities. Variable management subsystem is currently in place, however parser is does not currently uses it. The present system is unstable and in many terms UNUSABLE. Currently master, the only branch is in prototyping state and for most portion of time is unstable. For stable versions, lookup the release page [here](www.github.com/supragya/HLang/releases). Still, USE WITH CAUTION - DO NOT DEPLOY.
+HLang is a scripting language made primarily for becoming the main shell scripting language for [HelenOS](http://www.helenos.org). Currently the system is under development, with only primitive lexing and parsing capabilities. Variable management subsystem is currently in place, however parser is does not currently uses it. The present system is unstable and in many terms UNUSABLE. Currently master, the only branch is in prototyping state and for most portion of time is unstable. For stable versions, lookup the release page [here](https://www.github.com/supragya/HLang/releases). Still, USE WITH CAUTION - DO NOT DEPLOY.
 
 
 Building HLang from source
