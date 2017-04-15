@@ -46,6 +46,8 @@ int has_lval(int);
 <_MLCMNT><<EOF>>					/* Error, but treat as if nothing happened */
 <_MLCMNT>"*#"						{BEGIN INITIAL;}
 
+"&&"							{return LAND;}
+"||"							{return LOR;}
 "if"							{return IF;}
 "elif"							{return ELIF;}
 "else"							{return ELSE;}
