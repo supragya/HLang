@@ -20,38 +20,38 @@ typedef unsigned long variable_ptr_t;
  *  @param	scope		scope number of the variable (defaults 0, file scope)i
  *  @return	Variable storage location in the storage bin
  */
-variable_ptr_t var_new(char *new_varname, unsigned int scope);
+variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope);
 
 /** @brief	Finds a valid free location in the storage bin
  *  @param	varname		variable name to use during hashing
  *  @return	closest position in the storage bin which is free corresponding to the given varname (positive offset)
  */
-unsigned long find_valid_location(char *varname);
+unsigned long vms_find_valid_location(char *varname);
 
 
 /** @brief	Hashes a given string into an unsigned long
  *  @param	varname		variable name to use during hashing
  *  @return	hashed location in the storage bin
  */
-unsigned long calchash(char *varname);
+unsigned long vms_calchash(char *varname);
 
 
 /** @brief	Assign a given storage location with string
  *  @param	var		variable storage location in the storage bin
  *  @param	str		string to save
  */
-void var_assign(variable_ptr_t var, char *str);
+void vms_assign_to_bin_location(variable_ptr_t var, char *str);
 
 /** @brief	Assign a given variable name with a given scope with string
  *  @param	varname		variable name
  *  @param	scope		scope of the variable
  *  @param	str		string to save
  */
-void var_assign_to_varname(char *varname, unsigned int scope, char *str);
+void vms_assign_to_varname(char *varname, unsigned int scope, char *str);
 
 /** @brief	Finds variable with a given scope in the storage bin
  *  @param	varname		variable name
  *  @param	scope		scope of the variable to be found out
  *  @return	location in storage bin where the variable is stored. If not found, TOTAL_SLOT is returned
  */
-variable_ptr_t var_lookup(char *varname, unsigned int scope);
+variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);

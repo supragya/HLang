@@ -10,14 +10,14 @@ unsigned long locations_available = TOTAL_SLOTS;
 
 variable_t storage[TOTAL_SLOTS];
 
-variable_ptr_t var_new(char *new_varname, unsigned int scope){
+variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	/* Testing whether the combination already exists or not */
 	if(1){
 		/* Find integer position where the variable will be stored */
 		unsigned long position = 0;
 		if(locations_available !=0)
 			/* We have locations available for variable storage */
-			position = find_valid_location(new_varname);
+			position = vms_find_valid_location(new_varname);
 		else
 			/* Ran out of memory */
 			yyerror("Not enough memory to save variables");
@@ -40,9 +40,9 @@ variable_ptr_t var_new(char *new_varname, unsigned int scope){
 }
 
 
-unsigned long find_valid_location(char *varname){
+unsigned long vms_find_valid_location(char *varname){
 	/* Find hashed location in the bin corresponding to varname */
-	unsigned long hashval = calchash(varname);
+	unsigned long hashval = vms_calchash(varname);
 	
 	/* If the given location is available, return position, else find location with least positive offset */
 	while(storage[hashval].occupation == OCCUPIED)
@@ -50,7 +50,7 @@ unsigned long find_valid_location(char *varname){
 	return hashval;
 }
 
-unsigned long calchash(char *varname){
+unsigned long vms_calchash(char *varname){
 	int len = strlen(varname);
 	unsigned int i = 0, temp;
 	unsigned int pos = 0;	
@@ -65,7 +65,7 @@ unsigned long calchash(char *varname){
 	return pos;
 }
 
-void var_assign(variable_ptr_t var, char *str){
+void vms_assign_to_bin_location(variable_ptr_t var, char *str){
 	if (var >= TOTAL_SLOTS)
 		yyerror("Undefined variable_ptr_t value");
 	else if(!storage[var].occupation == OCCUPIED)
@@ -73,13 +73,13 @@ void var_assign(variable_ptr_t var, char *str){
 	strcpy(storage[var].value, str);
 }
 
-void var_assign_to_varname(char *varname, unsigned int scope, char *str){
-	var_assign(var_lookup(varname, scope), str);
+void vms_assign_to_varname(char *varname, unsigned int scope, char *str){
+	vms_assign_to_bin_location(vms_var_lookup(varname, scope), str);
 }
 
-variable_ptr_t var_lookup(char* varname, unsigned int scope){
+variable_ptr_t vms_var_lookup(char* varname, unsigned int scope){
 	/* Find hash of the varname */
-	unsigned long hashval = calchash(varname);
+	unsigned long hashval = vms_calchash(varname);
 
 	/* Find variable in storage[], positive offsets */
 	unsigned long ctr = TOTAL_SLOTS;
