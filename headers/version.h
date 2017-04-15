@@ -2,9 +2,9 @@
  * Please do not temper the names.
  */
 
-#define WIP 0
+#define WIP 1
 #define VERSION 0
-#define DRAFT "d01"
+#define DRAFT "d02"
 
 
 char version_name[][16]	=	{ "Angry Axolotl  ",
