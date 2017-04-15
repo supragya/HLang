@@ -18,20 +18,22 @@ int has_lval(int);
 
 %%
 
-"declare"[ \t\n]*"map"					{return MAPDECL;}
-"declare"						{return VARDECL;}
+"declare"[ \t\n]*"map"					{printf("[mapdecl]\n");return MAPDECL;}
+"declare"						{printf("[vardecl]\n");return VARDECL;}
 [$][_a-zA-Z][_a-zA-Z0-9]+				{yyclean(); yyappend(yytext+1); return VARNAME;}
 [$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"		{yyclean(); yyappend(yytext+1); return MELNAME;}
 [$][0-9]+						{yyclean(); yyappend(yytext+1); return ARGVAR;}
-([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); return NVAL;}
+([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); return STRING;}
 
 ["]							{yyclean(); BEGIN _STRING;}
 <_STRING>["]						{BEGIN INITIAL; return STRING;}
 <_STRING>.						{yyappend(yytext);}
 
 [#][^*].*[^\n]						/*Single line comments, do nothing */
-[{]							{return BROPEN;}
-[}]							{return BRCLOSE;}
+"("							{printf("[paranopen]\n");return PARANOPEN;}
+")"							{printf("[paranclose]\n");return PARANCLOSE;}	
+[{]							{printf("[BROPEN]\n");return BROPEN;}
+[}]							{printf("[BRCLOSE]\n");return BRCLOSE;}
 
 "<%"							{yyclean(); BEGIN _SHELLECHO;}
 <_SHELLECHO>">"						{BEGIN INITIAL; return SHELLECHO;}
@@ -48,14 +50,12 @@ int has_lval(int);
 
 "&&"							{return LAND;}
 "||"							{return LOR;}
-"if"							{return IF;}
-"elif"							{return ELIF;}
-"else"							{return ELSE;}
+"if"							{printf("[if]\n");return IF;}
+"elif"							{printf("[elif]\n");return ELIF;}
+"else"							{printf("[else]\n");return ELSE;}
 "while"							{return WHILE;}
 
-[a-zA-Z][a-zA-Z0-9]*"("					{yyclean(); yyappend(yytext); return FUNC;}
-[(]							{return PARANOPEN;}
-[)]							{return PARANCLOSE;}	
+[_a-zA-Z][a-zA-Z0-9]*[ \t\n]*"("			{yyclean(); yyappend(yytext); return FUNCCALL;}
 
 ">"							{return GT;}
 "<"							{return LT;}

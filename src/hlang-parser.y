@@ -30,7 +30,7 @@ input:	%empty
 function: functionname enclosement		
 	;
 
-functionname: FUNC			{printf("found function %s\n",yylval);}
+functionname: FUNC			{printf("<FUNCTION|%s>\n",yylval);}
 	;
 
 enclosement: BROPEN code BRCLOSE
@@ -45,42 +45,27 @@ code:	%empty
 sequential: stmt EOS
 	;
 
-selective: if other_ifs
+selective: if elseifs else
 	;
 
-other_ifs: elseifs else
-	|else
+if:	IF conditions enclosement
 	;
 
-if:	IF conditions enclosement	{printf("<IF>\n");}
+elseifs:%empty
+	|elseifs elseif
 	;
 
-elseifs: %empty
-	|elseifs elseif					{printf("<ELSEIF>\n");}
+elseif:	ELIF enclosement
 	;
 
-elseif:	ELIF conditions enclosement
+else:	%empty
+	|ELSE enclosement
 	;
 
-else:	ELSE enclosement				{printf("<ELSE>\n");}
+conditions: BROPEN relopr BRCLOSE
 	;
 
-conditions: PARANOPEN condition_in PARANCLOSE
-	;
-
-condition_in: andonlyconditions
-	|condition_in LOR andonlyconditions
-	;
-
-andonlyconditions: basicconditions
-	|andonlyconditions LAND basicconditions	{printf("andonly %s\n", yylval);} 
-	;
-
-basicconditions: VARNAME relopr STRING
-	|VARNAME relopr NVAL
-	;
-
-iterative: WHILE PARANOPEN conditions PARANCLOSE enclosement
+iterative: WHILE conditions enclosement
 	;
 
 relopr:	GT
@@ -103,9 +88,28 @@ maplist:mapvar
 	|maplist COMMA mapvar
 	;
 
-var:	VARNAME				{printf("variablename %s\n",yylval); }
-	|var ASSIGN STRING		{printf("ass_svar %s \n", yylval); }
-	|var ASSIGN NVAL		{printf("ass_nvar %s \n", yylval); }
+var:	VARNAME				{printf("<VARNAME|%s>\n",yylval); }
+	|var ASSIGN string		{printf("<VAR-ASSIGN-FUNCCALL|%s>\n", yylval); }
+	|var ASSIGN ARGVAR		{printf("<VAR-ASSIGN-ARGVAR|%s>\n",yylval);}
+;
+
+string:	STRING
+	|functioncall
+	;
+
+functioncall:FUNCCALL arguments PARANCLOSE
+	;
+
+arguments:arg otherargs
+	;
+
+otherargs: %empty
+	|COMMA arguments
+	;
+
+arg:	STRING				{printf("<ARGSTRING|%s>\n",yylval);}
+	|VARNAME			{printf("<ARGVARNM|%s>\n",yylval);}
+	|MELNAME			{printf("<ARGMLNAME|%s>\n",yylval);}
 	;
 
 mapvar:	VARNAME
@@ -113,6 +117,6 @@ mapvar:	VARNAME
 %%
 
 int yyerror(const char *s){
-	fprintf(stderr, "error: %s\n", s);
+	fprintf(stdout, "{{error: %s}}\n", s);
 	return 0;
 }
