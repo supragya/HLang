@@ -1,1 +1,1 @@
-int yyerror(char *s);
+int yyerror(const char *s);

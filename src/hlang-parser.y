@@ -10,7 +10,6 @@
 #include "variable_mgmt.h"
 
 %}
-
 %define api.value.type {char *}
 
 /* Terminals */
@@ -38,40 +37,47 @@ enclosement: BROPEN code BRCLOSE
 	;
 
 code:	%empty
-	|code sequential
-	|code selective
-	|code iterative
+	|code sequential		{printf("<SIQ>\n");}
+	|code selective			{printf("<SEL>\n");}
+	|code iterative			{printf("<ITR>\n");}
 	;
 
 sequential: stmt EOS
 	;
 
-selective: if
-	| if elseifs else
+selective: if other_ifs
 	;
 
-if:	IF PARANOPEN conditions PARANCLOSE enclosement
+other_ifs: elseifs else
+	|else
+	;
+
+if:	IF conditions enclosement	{printf("<IF>\n");}
 	;
 
 elseifs: %empty
-	|elseifs elseif
+	|elseifs elseif					{printf("<ELSEIF>\n");}
 	;
 
-elseif:	ELIF PARANOPEN conditions PARANCLOSE enclosement
+elseif:	ELIF conditions enclosement
 	;
 
-else:	ELSE enclosement
+else:	ELSE enclosement				{printf("<ELSE>\n");}
 	;
 
-conditions: andonlyconditions
-	|conditions LOR andonlyconditions
+conditions: PARANOPEN condition_in PARANCLOSE
+	;
+
+condition_in: andonlyconditions
+	|condition_in LOR andonlyconditions
 	;
 
 andonlyconditions: basicconditions
-	|andonlyconditions LAND basicconditions	{printf("andonly\n", yylval);} 
+	|andonlyconditions LAND basicconditions	{printf("andonly %s\n", yylval);} 
 	;
 
 basicconditions: VARNAME relopr STRING
+	|VARNAME relopr NVAL
 	;
 
 iterative: WHILE PARANOPEN conditions PARANCLOSE enclosement
@@ -85,8 +91,8 @@ relopr:	GT
 	|LE
 	;
 
-stmt:	VARDECL varlist
-	|MAPDECL maplist
+stmt:	VARDECL varlist		{printf("<VARDECL|%s>\n", yylval);}
+	|MAPDECL maplist	{printf("<MAPDECL|%s>\n", yylval);}
 	;
 
 varlist:var
@@ -106,7 +112,7 @@ mapvar:	VARNAME
 	;
 %%
 
-int yyerror(char *s){
+int yyerror(const char *s){
 	fprintf(stderr, "error: %s\n", s);
 	return 0;
 }
