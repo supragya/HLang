@@ -1,11 +1,6 @@
 function main{
 	declare $dummyvar = "before";
-	if {==} {
-		declare $ifvar = 99;
+	if (=){
 	}
-	if {$nestvar >= "sups"} {
-		declare $nest = "nest";
-	}
-	($varname == "shrey");
 	declare $nether = "after";
 }
