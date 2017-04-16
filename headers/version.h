@@ -4,7 +4,7 @@
 
 #define WIP 1
 #define VERSION 0
-#define DRAFT "d02"
+#define DRAFT "d03"
 
 
 char version_name[][16]	=	{ "Angry Axolotl  ",
