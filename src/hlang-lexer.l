@@ -20,13 +20,19 @@ int has_lval(int);
 
 "declare"[ \t\n]*"map"					{printf("[mapdecl]\n");return MAPDECL;}
 "declare"						{printf("[vardecl]\n");return VARDECL;}
-
-"&&"							{printf("[land]\n");return LAND;}
-"||"							{printf("[lor]\n");return LOR;}
+"return"						{printf("[return]\n");return RETURN;}
+"break"							{printf("[break]\n");return BREAK;}
+"continue"						{printf("[continue]\n");return CONTINUE;}
+"for"							{printf("[for]\n");return FOR;}
 "if"							{printf("[if]\n");return IF;}
 "elif"							{printf("[elif]\n");return ELIF;}
 "else"							{printf("[else]\n");return ELSE;}
 "while"							{printf("[while]\n");return WHILE;}
+"is"							{printf("[is]\n"); return IS;}
+
+
+"&&"							{printf("[land]\n");return LAND;}
+"||"							{printf("[lor]\n");return LOR;}
 
 ">"							{printf("[gt]\n");return GT;}
 "<"							{printf("[lt]\n");return LT;}
@@ -34,6 +40,15 @@ int has_lval(int);
 "!="|"<>"						{printf("[nq]\n");return NQ;}
 ">="							{printf("[ge]\n");return GE;}
 "<="							{printf("[le]\n");return LE;}
+
+[+]							{printf("[add]\n"); return ADD;}
+[+]{2}							{printf("[increment]\n"); return INCR;}
+[-]							{printf("[sub]\n"); return SUB;}
+[-]{2}							{printf("[decrement]\n"); return DECR;}
+[*]							{printf("[multiply]\n"); return MUL;}
+[*]{2}							{printf("[exponential]\n"); return EXP;}
+[/]							{printf("[divide]\n"); return DIV;}
+[/]{2}							{printf("[truncdiv]\n"); return TRUNCDIV;}
 
 [=]							{printf("[assign]\n");return ASSIGN;}
 [;]							{printf("[eos]\n"); return EOS;}
@@ -44,14 +59,10 @@ int has_lval(int);
 [{]							{printf("[bropen]\n");return BROPEN;}
 [}]							{printf("[brclose]\n");return BRCLOSE;}
 
-[$][_a-zA-Z][_a-zA-Z0-9]+				{yyclean(); yyappend(yytext+1); printf("[varname|%s]\n",yylval); return VARNAME;}
-[$][_a-zA-Z][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"		{yyclean(); yyappend(yytext+1); printf("[melname|%s]\n",yylval); return MELNAME;}
 [$][0-9]+						{yyclean(); yyappend(yytext+1); printf("[argvar|%s]\n",yylval);return ARGVAR;}
-([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); printf("[string|%s]\n",yylval);return STRING;}
+[$][_a-zA-Z0-9]+					{yyclean(); yyappend(yytext+1); printf("[varname|%s]\n",yylval); return VARNAME;}
+[$][_a-zA-Z0-9]+"["[a-zA-Z0-9]+"]"			{yyclean(); yyappend(yytext+1); printf("[melname|%s]\n",yylval); return MELNAME;}
 
-["]							{yyclean(); BEGIN _STRING;}
-<_STRING>["]						{BEGIN INITIAL; printf("[string|%s]\n",yylval); return STRING;}
-<_STRING>.						{yyappend(yytext);}
 
 [#][^*].*[^\n]						/*Single line comments, do nothing */
 
@@ -68,8 +79,16 @@ int has_lval(int);
 <_MLCMNT><<EOF>>					/* Error, but treat as if nothing happened */
 <_MLCMNT>"*#"						{BEGIN INITIAL;}
 
+([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); printf("[string|%s]\n",yylval);return NSTRING;}
+
+[_a-zA-Z0-9]+						{yyclean(); yyappend(yytext); printf("[genstring]%s\n",yylval); return GSTRING;}
+
+["]							{yyclean(); BEGIN _STRING;}
+<_STRING>["]						{BEGIN INITIAL; printf("[string|%s]\n",yylval); return STRING;}
+<_STRING>.						{yyappend(yytext);}
+
 [ \t\n]							/* Eat up whitespaces */
-.							{printf("[error-lexer]\n");return ERR; }
+.							{printf("[error-lexer|%s]\n", yytext);return ERR; }
 
 %%
 
@@ -101,7 +120,7 @@ void yyappend(char *str){
 }
 
 int has_lval(int tokentype){
-	int lvaltypes[] = {VARNAME, MELNAME, ARGVAR, NVAL, STRING, SHELLECHO, FUNC, FUNCCALL, -1};
+	int lvaltypes[] = {VARNAME, MELNAME, ARGVAR, NSTRING, STRING, GSTRING, SHELLECHO, FUNC, FUNCCALL, -1};
 	int i;
 	for(i = 0;lvaltypes[i] != -1;i++)
 		if(tokentype == lvaltypes[i])
