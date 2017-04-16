@@ -1,0 +1,24 @@
+#!/script/HLang
+
+function main {
+	declare $var1, $_new = "vals";
+	declare map $mapvar, $2mapvar = {key1 is "apple", key2 is "oranges", key3 is "beans"};
+	$2mapvar[0] = "purple";
+	$2mapvar[1] = red;
+
+	# I am calling a new function now
+	$var1 = foo($var1);
+
+	for($var1 = 0; $var1 <= 200; $var1++){}
+	while($var1 != 0){
+		$var1--;
+	}
+}
+
+function foo {
+	declare $myvar = $HL_ARGLEN;
+	<% echo MYNAME >;
+	$myvar = <% cat data.txt >;
+	declare $bool = HL_STRCMP($myvar,"Hello");
+	return $bool;
+}
