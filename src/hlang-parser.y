@@ -1,4 +1,4 @@
-/* HLang Parser Bison 
+/* HLang Parser Bison
  * created by Supragya Raj
  */
 
@@ -23,99 +23,94 @@
 
 %%
 
-input:	%empty
-	|input function 			
+script:
+	%empty
+	|script function
+	/*|script alltokens*/
 	;
 
-function: functionname enclosement		
+function:
+	functionname enclosement			{printf("\t<FUNCTION>\n");}
 	;
 
-functionname: FUNC			{printf("<FUNCTION|%s>\n",yylval);}
+functionname:
+	FUNC						{printf("\t<FUNCTIONNAME:%s>\n"	,yylval);}
 	;
 
-enclosement: BROPEN code BRCLOSE
+enclosement:
+	BROPEN code BRCLOSE				{printf("\t<ENCLOSEMENT>\n");	}
 	;
 
-code:	%empty
-	|code sequential		{printf("<SIQ>\n");}
-	|code selective			{printf("<SEL>\n");}
-	|code iterative			{printf("<ITR>\n");}
+code:
+	%empty
+	|code variable_declarations 			{printf("\t<CODE: VARIABLE DECLARATIONS>\n");}
+	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n");}
 	;
 
-sequential: stmt EOS
+variable_declarations:
+	mapvariables_declaration EOS			{printf("\t<VARIABLE DECLARATIONS: MAP>\n");}
+	|generalvariables_declaration EOS		{printf("\t<VARIABLE DECLARATIONS: GEN>\n");}
 	;
 
-selective: if elseifs else
+/* Map variables declaration code syntax */
+mapvariables_declaration:
+	MAPDECL midvariables_map lastvariable_map	{printf("\t<MAPVARIABLE DECLARATIONS>\n");}
 	;
 
-if:	IF conditions enclosement
+midvariables_map:
+	%empty
+	|midvariables_map lastvariable_map COMMA	{printf("\t<MIDVARIABLES MAP>\n");}
 	;
 
-elseifs:%empty
-	|elseifs elseif
+lastvariable_map:
+	variablename					{printf("\t<LASTVARIABLE MAP>\n");}
+
+/* General variables declaration code syntax */
+generalvariables_declaration:
+	VARDECL midvariables_gen lastvariable_gen	{printf("\t<GENVARIABLE DECLARATIONS>\n");}
 	;
 
-elseif:	ELIF enclosement
+midvariables_gen:
+	%empty
+	|midvariables_gen lastvariable_gen COMMA	{printf("\t<MIDVARIABLES GEN>\n");}
 	;
 
-else:	%empty
-	|ELSE enclosement
+lastvariable_gen:
+	variablename					{printf("\t<LASTVARIABLE GEN: VARNAME>\n");}
+	|variablename ASSIGN STRING			{printf("\t<LASTVARIABLE GEN: VARNAME ASSIGN STRING: %s>\n", $3);}
 	;
 
-conditions: BROPEN relopr BRCLOSE
-	|BROPEN VARNAME relopr STRING BRCLOSE	{printf("<IFPOPENCLOSE>\n");}
+variablename:
+	VARNAME						{printf("\t<VARIABLENAME:%s>\n",yylval);}
 	;
 
-iterative: WHILE conditions enclosement
+selective_constructs:
+	if_part elif_parts else_part			{printf("\t<SELECTIVE CONSTRUCTS>\n");}
 	;
 
-relopr:	GT
-	|LT
-	|EQ
-	|NQ
-	|GE
-	|LE
+if_part:
+	IF conditions enclosement			{printf("\t<IF PART>\n");}
 	;
 
-stmt:	VARDECL varlist		{printf("<VARDECL|%s>\n", yylval);}
-	|MAPDECL maplist	{printf("<MAPDECL|%s>\n", yylval);}
-	|PARANOPEN VARNAME relopr STRING PARANCLOSE	{printf("<TSTPOPENCLOSE>\n");}
+elif_parts:
+	%empty						{printf("\t<ELIF PARTS: NONE>\n");}
+	|elif_parts elif_part				{printf("\t<ELIF PARTS: NEW>\n");}
 	;
 
-varlist:var
-	|varlist COMMA var
+elif_part:
+	ELIF conditions enclosement			{printf("\t<ELIF PART: FOUND SINGULAR>\n");}
 	;
 
-maplist:mapvar
-	|maplist COMMA mapvar
+else_part:
+	%empty						{printf("\t<ELSE PART: NONE>\n");}
+	|ELSE conditions enclosement			{printf("\t<ELSE PART: FOUND>\n");}
 	;
 
-var:	VARNAME				{printf("<VARNAME|%s>\n",yylval); }
-	|var ASSIGN string		{printf("<VAR-ASSIGN-FUNCCALL|%s>\n", yylval); }
-	|var ASSIGN ARGVAR		{printf("<VAR-ASSIGN-ARGVAR|%s>\n",yylval);}
-;
-
-string:	STRING
-	|functioncall
+conditions:
+	PARANOPEN ASSIGN PARANCLOSE			{printf("\t<TEMP CONDITION>\n");}
 	;
 
-functioncall:FUNCCALL arguments PARANCLOSE
-	;
-
-arguments:arg otherargs
-	;
-
-otherargs: %empty
-	|COMMA arguments
-	;
-
-arg:	STRING				{printf("<ARGSTRING|%s>\n",yylval);}
-	|VARNAME			{printf("<ARGVARNM|%s>\n",yylval);}
-	|MELNAME			{printf("<ARGMLNAME|%s>\n",yylval);}
-	;
-
-mapvar:	VARNAME
-	;
+/*alltokens: MAPDECL|VARDECL|VARNAME|MELNAME|ARGVAR|NVAL|STRING|BROPEN|BRCLOSE|SHELLECHO|FUNC|IF|ELIF|ELSE|WHILE|EOS|PARANOPEN|PARANCLOSE|ASSIGN|FUNCCALL|COMMA|GT|LT|EQ|NQ|GE|LAND|LOR|LE|ERR|EOL;*/
 %%
 
 int yyerror(const char *s){
