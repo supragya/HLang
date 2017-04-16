@@ -1,4 +1,4 @@
-/* HLang Main Entry function 
+/* HLang Main Entry function
  * created by Supragya Raj
  */
 
@@ -30,10 +30,11 @@ int main(char **argv){
 				"tests/functions.hl",
 				"tests/comments.hl",
 				"tests/elastic_horse_regressions.hl",
+				"tests/full_test.hl"
 				"" };
 	/* Iterate through all the tests */
 	unsigned int i = 0;
-	while(strcmp(testset[i],"")){		
+	while(strcmp(testset[i],"")){
 		printf("\n>>>PARSING FILE \"%s\"\n", testset[i]);
 		if(set_read_file(testset[i]))
 			return 1; //Cannot find file
@@ -51,6 +52,6 @@ void welcome(){
 	printf("+-%s------------------------------------%s-+\n", WIP?"wip":"---", DRAFT );
 }
 
-void complete(){	
+void complete(){
 	printf("\n+-COMPLETE----------------------+\n");
 }
