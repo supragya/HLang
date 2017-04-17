@@ -1,4 +1,5 @@
 #!/scripts/HLang
+
 function main {
 declare $returnval[0]="<% mkfile -s 2m /tmp/img >";
 declare $returnval[1]="<% file_bd /tmp/img fbd0 >";
@@ -13,7 +14,7 @@ declare $ctr = "0";
 while ($ctr != 8){
 	if ( <% {$returnval[{$ctr}]} > != 0){
 		<% echo Test failed >;
-		exit();
+		HL_EXIT();
 	}
 		$ctr = $ctr + 1;
 	}

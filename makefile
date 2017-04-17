@@ -1,4 +1,4 @@
-bin/hlang-interpreter:	src/main.c src/variable_mgmt.c src/hlang-lexer.l src/hlang-parser.y
+bin/HLang-interpreter:	src/main.c src/variable_mgmt.c src/hlang-lexer.l src/hlang-parser.y
 	@echo "+------------------------------------+"
 	@echo "|  MAKE: HLang Interpreter Builder   |"
 	@echo "+------------------------------------+"
@@ -8,11 +8,11 @@ bin/hlang-interpreter:	src/main.c src/variable_mgmt.c src/hlang-lexer.l src/hlan
 	gcc -o $@ src/main.c src/variable_mgmt.c build/hlang-parser.c build/hlang-lexer.c -lfl -I headers/ -std=gnu99
 
 .PHONY:	clean reset
-clean:	
+clean:
 	@echo "+--Cleaning clutter------------------+"
 	-@rm -r build/* headers/buildtime* bin/*
 	$(MAKE)
 reset:
 	@echo "+--Reset to bare sources------------+"
 	@echo "Any errors suggesting files not found are okay"
-	@-rm -r build/ headers/buildtime* bin 
+	@-rm -r build/ headers/buildtime* bin
