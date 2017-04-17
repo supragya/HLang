@@ -137,7 +137,44 @@ else_part:
 	;
 
 conditions:
-	ASSIGN			{printf("\t<TEMP CONDITION>\n");}
+	condition					{printf("\t<CONDITIONS>\n");}
+	|conditions LOR condition			{printf("\t<CONDITIONS: OR FOUND>\n");}
+	;
+
+condition:
+	VARNAME relopr NSTRING				{printf("\t<CONDITION: VARNAME RELOPR NSTRING>\n");}
+	|NSTRING relopr VARNAME				{printf("\t<CONDITION: NSTRING RELOPR VARNAME>\n");}
+	|VARNAME relopr STRING				{printf("\t<CONDITION: VARNAME RELOPR STRING>\n");}
+	|STRING relopr VARNAME				{printf("\t<CONDITION: STRING RELOPR VARNAME>\n");}
+	|VARNAME relopr functioncall			{printf("\t<CONDITION: VARNAME RELOPR FUNCTIONCALL>\n");}
+	|functioncall relopr VARNAME			{printf("\t<CONDITION: FUNCTIONCALL RELOPR VARNAME>\n");}
+	|VARNAME relopr SHELLECHO			{printf("\t<CONDITION: VARNAME RELOPR SHELLECHO>\n");}
+	|SHELLECHO relopr VARNAME			{printf("\t<CONDITION: SHELLECHO RELOPR VARNAME>\n");}
+	|MELNAME relopr NSTRING				{printf("\t<CONDITION: MELNAME RELOPR NSTRING>\n");}
+	|NSTRING relopr MELNAME				{printf("\t<CONDITION: NSTRING RELOPR MELNAME>\n");}
+	|MELNAME relopr STRING				{printf("\t<CONDITION: MELNAME RELOPR STRING>\n");}
+	|STRING relopr MELNAME				{printf("\t<CONDITION: STRING RELOPR MELNAME>\n");}
+	|MELNAME relopr functioncall			{printf("\t<CONDITION: MELNAME RELOPR FUNCTIONCALL>\n");}
+	|functioncall relopr MELNAME			{printf("\t<CONDITION: FUNCTIONCALL RELOPR MELNAME>\n");}
+	|MELNAME relopr SHELLECHO			{printf("\t<CONDITION: MELNAME RELOPR SHELLECHO>\n");}
+	|SHELLECHO relopr MELNAME			{printf("\t<CONDITION: SHELLECHO RELOPR MELNAME>\n");}
+	|functioncall relopr NSTRING			{printf("\t<CONDITION: FUNCTIONCALL RELOPR NSTRING>\n");}
+	|NSTRING relopr functioncall			{printf("\t<CONDITION: NSTRING RELOPR FUNCTIONCALL>\n");}
+	|functioncall relopr STRING			{printf("\t<CONDITION: FUNCTIONCALL RELOPR STRING>\n");}
+	|STRING relopr functioncall			{printf("\t<CONDITION: STRING RELOPR FUNCTIONCALL>\n");}
+	|SHELLECHO relopr NSTRING			{printf("\t<CONDITION: SHELLECHO RELOPR NSTRING>\n");}
+	|NSTRING relopr SHELLECHO			{printf("\t<CONDITION: NSTRING RELOPR SHELLECHO>\n");}
+	|SHELLECHO relopr STRING			{printf("\t<CONDITION: SHELLECHO RELOPR STRING>\n");}
+	|STRING relopr SHELLECHO			{printf("\t<CONDITION: STRING RELOPR SHELLECHO>\n");}
+	;
+
+relopr:
+	EQ						{printf("\t<RELOPR: EQ>\n");}
+	|NQ						{printf("\t<RELOPR: NQ>\n");}
+	|LT						{printf("\t<RELOPR: LT>\n");}
+	|GT						{printf("\t<RELOPR: GT>\n");}
+	|LE						{printf("\t<RELOPR: LE>\n");}
+	|GE						{printf("\t<RELOPR: GE>\n");}
 	;
 
 functioncall:
