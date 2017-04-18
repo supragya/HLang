@@ -1,6 +1,6 @@
 function main{
 	declare $dummyvar = "before";
-	if (=){
+	if ($variable == 200){
 	}
 	declare $nether = "after";
 }
