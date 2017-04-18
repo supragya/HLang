@@ -49,6 +49,7 @@ code:
 	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
 	|code SHELLECHO	EOS				{printf("\t<CODE: SHELL ECHO>\n");}
 	|code functioncall EOS				{printf("\t<CODE: FUNCTIONCALL>\n");}
+	|code variable_assignment EOS			{printf("\t<CODE: VARIABLE ASSIGNMENT>\n");}
 	;
 
 variable_declarations:
@@ -81,8 +82,8 @@ midmapelementinit:
 	;
 
 lastmapelementinit:
-	GSTRING IS NSTRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS NSTRING");}
-	|GSTRING IS STRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS STRING");}
+	GSTRING IS NSTRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS NSTRING>\n");}
+	|GSTRING IS STRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS STRING>\n");}
 	;
 
 /* General variables declaration code syntax */
@@ -107,11 +108,16 @@ assignval:
 	|ARGVAR						{printf("\t<ASSIGNVAL ARGVAR>\n");}
 	|SHELLECHO					{printf("\t<ASSIGNVAL SHELLECHO\n");}
 	|functioncall					{printf("\t<ASSIGNVAL FUNCTIONCALL>\n");}
+	|arithmetic_expr				{printf("\t<ASSIGNVAL ARITHMETIC EXPR>\n");}
 	;
 
 variablename:
 	VARNAME						{printf("\t<VARIABLENAME:%s>\n",yylval);}
 	|MELNAME					{printf("\t<MELNAME:%s>\n",yylval);}
+	;
+
+variable_assignment:
+	variablename ASSIGN assignval			{printf("\t<VARIABLE ASSIGNMENT: VARAIBLENAME ASSIGN ASSIGNVAL>\n");}
 	;
 
 selective_constructs:
@@ -207,7 +213,9 @@ whileloop:
 	WHILE PARANOPEN conditions PARANCLOSE enclosement	{printf("\t<WHILE LOOP>\n");}
 	;
 
-
+arithmetic_expr:
+	variablename ADD NSTRING			{printf("\t<ARITHMETIC EXPR: VARIABLENAME ADD VARIABLENAME>\n");}
+	;
 
 /*alltokens: IS|RETURN|BREAK|CONTINUE|FOR|ADD|INCR|SUB|DECR|MUL|EXP|DIV|TRUNCDIV|MAPDECL|VARDECL|VARNAME|MELNAME|ARGVAR|NSTRING|GSTRING|STRING|BROPEN|BRCLOSE|SHELLECHO|FUNC|IF|ELIF|ELSE|WHILE|EOS|PARANOPEN|PARANCLOSE|ASSIGN|FUNCCALL|COMMA|GT|LT|EQ|NQ|GE|LAND|LOR|LE|ERR|EOL;*/
 %%
