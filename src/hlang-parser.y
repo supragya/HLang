@@ -11,12 +11,13 @@
 
 %}
 %define api.value.type {char *}
+%error-verbose
 
 /* Terminals */
 %token	MAPDECL	VARDECL	VARNAME	MELNAME	ARGVAR
 %token	NSTRING	STRING	GSTRING	BROPEN	BRCLOSE	SHELLECHO
 %token	FUNC	IF	ELIF	ELSE	WHILE	RETURN	BREAK	CONTINUE	FOR	IS
-%token	EOS	PARANOPEN	PARANCLOSE
+%token	EOS	PARANOPEN	PARANCLOSE	EXCLAMATION
 %token	ASSIGN	FUNCCALL	COMMA
 %token	GT	LT	EQ	NQ	GE	LAND	LOR
 %token	LE	ERR	EOL
@@ -31,11 +32,7 @@ script:
 	;
 
 function:
-	functionname enclosement			{printf("\t<FUNCTION>\n");}
-	;
-
-functionname:
-	FUNC						{printf("\t<FUNCTIONNAME:%s>\n"	,yylval);}
+	FUNC enclosement				{printf("\t<FUNCTION>\n");}
 	;
 
 enclosement:
@@ -44,125 +41,162 @@ enclosement:
 
 code:
 	%empty
-	|code variable_declarations  EOS		{printf("\t<CODE: VARIABLE DECLARATIONS>\n");}
+	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n");}
 	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n");}
 	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
-	|code SHELLECHO	EOS				{printf("\t<CODE: SHELL ECHO>\n");}
-	|code functioncall EOS				{printf("\t<CODE: FUNCTIONCALL>\n");}
-	|code variable_assignment EOS			{printf("\t<CODE: VARIABLE ASSIGNMENT>\n");}
 	;
 
-variable_declarations:
-	mapvariables_declaration			{printf("\t<VARIABLE DECLARATIONS: MAP>\n");}
-	|generalvariables_declaration		{printf("\t<VARIABLE DECLARATIONS: GEN>\n");}
-	;
+/* Different constructs */
 
-/* Map variables declaration code syntax */
-mapvariables_declaration:
-	MAPDECL midvariables_map lastvariable_map	{printf("\t<MAPVARIABLE DECLARATIONS>\n");}
-	;
-
-midvariables_map:
-	%empty
-	|midvariables_map lastvariable_map COMMA	{printf("\t<MIDVARIABLES MAP>\n");}
-	;
-
-lastvariable_map:
-	variablename					{printf("\t<LASTVARIABLE MAP>\n");}
-	|variablename BROPEN mapelementsinit BRCLOSE	{printf("\t<LASTVARIABLE MAP MAPINIT>\n");}
-	;
-
-mapelementsinit:
-	midmapelementinit lastmapelementinit		{printf("\t<MAPELEMENTSINIT>\n");}
-	;
-
-midmapelementinit:
-	%empty						{printf("\t<MIDMAPELEMENTINIT: NONE>\n");}
-	|midmapelementinit COMMA lastmapelementinit	{printf("\t<MIDMAPELEMENTINIT: NEW>\n");}
-	;
-
-lastmapelementinit:
-	GSTRING IS NSTRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS NSTRING>\n");}
-	|GSTRING IS STRING				{printf("\t<LASTMAPELEMENTINIT GSTRING IS STRING>\n");}
-	;
-
-/* General variables declaration code syntax */
-generalvariables_declaration:
-	VARDECL midvariables_gen lastvariable_gen	{printf("\t<GENVARIABLE DECLARATIONS>\n");}
-	;
-
-midvariables_gen:
-	%empty
-	|midvariables_gen lastvariable_gen COMMA	{printf("\t<MIDVARIABLES GEN>\n");}
-	;
-
-lastvariable_gen:
-	variablename					{printf("\t<LASTVARIABLE GEN: VARNAME>\n");}
-	|variablename ASSIGN arithmetic_expr			{printf("\t<LASTVARIABLE GEN: VARNAME ASSIGN ASSIGNVAL: %s>\n", $3);}
-	;
-
-variablename:
-	VARNAME						{printf("\t<VARIABLENAME:%s>\n",yylval);}
-	|MELNAME					{printf("\t<MELNAME:%s>\n",yylval);}
-	|ARGVAR						{printf("\t<ARGVAR:%s>\n",yylval);}
-	;
-
-variable_assignment:
-	variablename ASSIGN arithmetic_expr		{printf("\t<VARIABLE ASSIGNMENT: VARAIBLENAME ASSIGN ASSIGNVAL>\n");}
+sequential_constuct:
+	mapvariables_declaration EOS			{printf("\t<SEQUENTIAL CONSTRUCT: MAP VARIABLE DECLARATIONS>\n");}
+	|generalvariables_declaration EOS		{printf("\t<SEQUENTIAL CONSTRUCT: GEN VARIABLE DECLARATIONS>\n");}
+	|SHELLECHO EOS					{printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n");}
+	|functioncall EOS				{printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n");}
+	//|code variable_assignment EOS			{printf("\t<CODE: VARIABLE ASSIGNMENT>\n");}
 	;
 
 selective_constructs:
-	if_part elif_parts else_part			{printf("\t<SELECTIVE CONSTRUCTS>\n");}
+	//TODO: work
+	MELNAME
 	;
 
-if_part:
-	IF PARANOPEN conditions PARANCLOSE enclosement			{printf("\t<IF PART>\n");}
+iterative_constructs:
+	whileloop					{printf("\t<ITERATIVE CONSTRUCTS: WHILE LOOP>\n");}
 	;
 
-elif_parts:
-	%empty						{printf("\t<ELIF PARTS: NONE>\n");}
-	|elif_parts elif_part				{printf("\t<ELIF PARTS: NEW>\n");}
+
+
+/* Map variables declaration code syntax */
+mapvariables_declaration:
+	MAPDECL map_variablelist			{printf("\t<MAPVARIABLE DECLARATIONS: MAP VAR LIST>\n");}
 	;
 
-elif_part:
-	ELIF PARANOPEN conditions PARANCLOSE enclosement			{printf("\t<ELIF PART: FOUND SINGULAR>\n");}
+map_variablelist:
+	map_discrete_variable				{printf("\t<MAPVARIABLELIST: DISCRETE VARIABLE FOUND>\n");}
+	|map_variablelist COMMA map_discrete_variable	{printf("\t<MAPVARIABLELIST: COMMA DISCRETE>\n");}
 	;
 
-else_part:
-	%empty						{printf("\t<ELSE PART: NONE>\n");}
-	|ELSE conditions enclosement			{printf("\t<ELSE PART: FOUND>\n");}
+map_discrete_variable: // 1 SR conflict
+	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND>\n");}
+	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS>\n");}
 	;
 
+keyvalpairs:
+	keytype IS datatype				{printf("\t<KEYVALPAIRS: FOUND DISCRETE>\n");}
+	|keyvalpairs COMMA keytype IS datatype		{printf("\t<KEYVALPAIRS: FOUND COMMA>\n");}
+	;
+
+keytype:
+	STRING						{printf("\t<KEYTYPE: STRING>\n");}
+	|NSTRING					{printf("\t<KEYTYPE: NSTRING>\n");}
+	;
+
+datatype:
+	STRING						{printf("\t<DATATYPE: STRING>\n");}
+	|NSTRING					{printf("\t<DATATYPE: NSTRING>\n");}
+	;
+
+
+
+
+/* General variables declaration code syntax */
+generalvariables_declaration:
+	VARDECL gen_variablelist			{printf("\t<GENVARIABLE DECLARATIONS: GEN VAR LIST>\n");}
+	;
+
+gen_variablelist:
+	gen_discrete_variable				{printf("\t<GENVARIABLE DECLARATIONS: DISCRETE VARIABLE FOUND>\n");}
+	|gen_variablelist COMMA gen_discrete_variable	{printf("\t<GENVARIABLE DECLARATIONS: COMMA DISCRETE>\n");}
+	;
+
+gen_discrete_variable:
+	VARNAME						{printf("\t<GEN DISCRETE VARIABLE: VARNAME>\n");}
+	|VARNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION>\n");}
+	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME>\n");}
+	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION>\n");}
+	;
+
+
+
+
+
+
+/* Arithmetic and otherwise */
+
+expression:
+	expression2						{printf("\t<EXPRESSION: EXPRESSION2>\n");}
+	|expression ADD expression2				{printf("\t<EXPRESSION: ADD EXPRESSION2>\n");}
+	|expression SUB expression2				{printf("\t<EXPRESSION: SUB EXPRESSION2>\n");}
+	;
+
+expression2:
+	expression3						{printf("\t<EXPRESSION2: EXPRESSION3>\n");}
+	|expression2 MUL expression3				{printf("\t<EXPRESSION2: MUL EXPRESSION3>\n");}
+	|expression2 DIV expression3				{printf("\t<EXPRESSION2: DIV EXPRESSION3>\n");}
+	|expression2 TRUNCDIV expression3			{printf("\t<EXPRESSION2: TRUNCDIV EXPRESSION3>\n");}
+	;
+
+expression3:
+	expr_unary_preceder PARANOPEN expression PARANCLOSE expr_successor	{printf("\t<EXPRESSION3: UNARYPREC EXPRESSION EXPRSUCC>\n");}
+	|expr_unary_preceder discrete_term expr_successor	{printf("\t<EXPRESSION3: UNARYPREC TERM EXPRSUCC>\n");}
+	;
+
+expr_unary_preceder:
+	%empty							{printf("\t<EXPR UNARY PREC: NONE>\n");}
+	|SUB							{printf("\t<EXPR UNARY PREC: NEGATIVE>\n");}
+	|ADD							{printf("\t<EXPR UNARY PREC: POSITIVE>\n");}
+	;
+
+expr_successor:
+	%empty							{printf("\t<EXPR SUCCESSOR: NONE>\n");}
+	|EXCLAMATION						{printf("\t<EXPR SUCCESSOR: FACTORIAL>\n");}
+	|EXP discrete_term					{printf("\t<EXPR SUCCESSOR: EXPONENTIAL>\n");}
+	|EXP PARANOPEN expression PARANCLOSE			{printf("\t<EXPR SUCCESSOR: EXPONENTIAL EXPR>\n");}
+	;
+
+discrete_term:
+	VARNAME							{printf("\t<DISCRETE TERM: VARNAME>\n");}
+	|MELNAME						{printf("\t<DISCRETE TERM: MELNAME>\n");}
+	|STRING							{printf("\t<DISCRETE TERM: STRING>\n");}
+	|NSTRING						{printf("\t<DISCRETE TERM: NSTRING>\n");}
+	|ARGVAR							{printf("\t<DISCRETE TERM: ARGVAR>\n");}
+	|functioncall						{printf("\t<DISCRETE TERM: FUNCTIONCALL>\n");}
+	|SHELLECHO						{printf("\t<DISCRETE TERM: SHELLECHO>\n");}
+	;
+
+
+
+
+
+/* Boolean conditions set */
 conditions:
-	condition					{printf("\t<CONDITIONS>\n");}
-	|conditions LOR condition			{printf("\t<CONDITIONS: OR FOUND>\n");}
+	conditions_and_only				{printf("\t<CONDITIONS: AND ONLY CONDITION>\n");}
+	|conditions LOR conditions_and_only		{printf("\t<CONDITIONS: LOR AND CONDITION>\n");}
 	;
 
-condition:
-	VARNAME relopr NSTRING				{printf("\t<CONDITION: VARNAME RELOPR NSTRING>\n");}
-	|NSTRING relopr VARNAME				{printf("\t<CONDITION: NSTRING RELOPR VARNAME>\n");}
-	|VARNAME relopr STRING				{printf("\t<CONDITION: VARNAME RELOPR STRING>\n");}
-	|STRING relopr VARNAME				{printf("\t<CONDITION: STRING RELOPR VARNAME>\n");}
-	|VARNAME relopr functioncall			{printf("\t<CONDITION: VARNAME RELOPR FUNCTIONCALL>\n");}
-	|functioncall relopr VARNAME			{printf("\t<CONDITION: FUNCTIONCALL RELOPR VARNAME>\n");}
-	|VARNAME relopr SHELLECHO			{printf("\t<CONDITION: VARNAME RELOPR SHELLECHO>\n");}
-	|SHELLECHO relopr VARNAME			{printf("\t<CONDITION: SHELLECHO RELOPR VARNAME>\n");}
-	|MELNAME relopr NSTRING				{printf("\t<CONDITION: MELNAME RELOPR NSTRING>\n");}
-	|NSTRING relopr MELNAME				{printf("\t<CONDITION: NSTRING RELOPR MELNAME>\n");}
-	|MELNAME relopr STRING				{printf("\t<CONDITION: MELNAME RELOPR STRING>\n");}
-	|STRING relopr MELNAME				{printf("\t<CONDITION: STRING RELOPR MELNAME>\n");}
-	|MELNAME relopr functioncall			{printf("\t<CONDITION: MELNAME RELOPR FUNCTIONCALL>\n");}
-	|functioncall relopr MELNAME			{printf("\t<CONDITION: FUNCTIONCALL RELOPR MELNAME>\n");}
-	|MELNAME relopr SHELLECHO			{printf("\t<CONDITION: MELNAME RELOPR SHELLECHO>\n");}
-	|SHELLECHO relopr MELNAME			{printf("\t<CONDITION: SHELLECHO RELOPR MELNAME>\n");}
-	|functioncall relopr NSTRING			{printf("\t<CONDITION: FUNCTIONCALL RELOPR NSTRING>\n");}
-	|NSTRING relopr functioncall			{printf("\t<CONDITION: NSTRING RELOPR FUNCTIONCALL>\n");}
-	|functioncall relopr STRING			{printf("\t<CONDITION: FUNCTIONCALL RELOPR STRING>\n");}
-	|STRING relopr functioncall			{printf("\t<CONDITION: STRING RELOPR FUNCTIONCALL>\n");}
-	|SHELLECHO relopr NSTRING			{printf("\t<CONDITION: SHELLECHO RELOPR NSTRING>\n");}
-	|NSTRING relopr SHELLECHO			{printf("\t<CONDITION: NSTRING RELOPR SHELLECHO>\n");}
-	|SHELLECHO relopr STRING			{printf("\t<CONDITION: SHELLECHO RELOPR STRING>\n");}
-	|STRING relopr SHELLECHO			{printf("\t<CONDITION: STRING RELOPR SHELLECHO>\n");}
+conditions_and_only:
+	discrete_condition				{printf("\t<AND ONLY CONDITION: DISCRETE CONDITION>\n");}
+	|conditions_and_only LAND discrete_condition	{printf("\t<AND ONLY CONDITION: LAND AND CONDITION>\n");}
+	;
+
+discrete_condition:
+	unary_condition_opr PARANOPEN conditions PARANCLOSE	{printf("\t<DISCRETE CONDITION: UNARY PARAN CONDITION>\n");}
+	|conditioncomponent relopr conditioncomponent	{printf("\t<DISCRETE CONDITION: BASIC CONDITION>\n");}
+	;
+
+unary_condition_opr:
+	%empty						{printf("\t<NO UNARY TO CONDITION>\n");}
+	|EXCLAMATION					{printf("\t<NOT FOUND: UNARY TO CONDITION>\n");}
+	;
+
+conditioncomponent:
+	functioncall					{printf("\t<CONDITIONCOMPONENT: FUNCTIONCALL>\n");}
+	|SHELLECHO					{printf("\t<CONDITIONCOMPONENT: SHELLECHO>\n");}
+	|MELNAME					{printf("\t<CONDITIONCOMPONENT: MELNAME>\n");}
+	|VARNAME					{printf("\t<CONDITIONCOMPONENT: VARNAME>\n");}
+	|NSTRING					{printf("\t<CONDITIONCOMPONENT: NSTRING>\n");}
+	|STRING						{printf("\t<CONDITIONCOMPONENT: STRING>\n");}
 	;
 
 relopr:
@@ -174,57 +208,30 @@ relopr:
 	|GE						{printf("\t<RELOPR: GE>\n");}
 	;
 
+
+/* Functioncall set */
 functioncall:
 	GSTRING PARANOPEN funccallargs PARANCLOSE	{printf("\t<FUNCTION CALL>\n");}
 
 funccallargs:
 	%empty						{printf("\t<FUNCTION CALL ARGUMENTS: NONE>\n");}
-	|mid_funccallargs last_funccallarg		{printf("\t<FUNCTION CALL ARGUMENTS: NEW>\n");}
+	|discrete_argument				{printf("\t<FUNCTION CALL ARGUMENTS: DISCRETE ARGUMENT>\n");}
+	|funccallargs COMMA discrete_argument		{printf("\t<FUNCTION CALL ARGUMENTS: COMMA DISCRETE ARGUMENT>\n");}
 	;
 
-mid_funccallargs:
-	%empty						{printf("\t<FUNCTION CALL ARGUMENTS MID: NONE>\n");}
-	|mid_funccallargs last_funccallarg COMMA	{printf("\t<FUNCTION CALL ARGUMENTS MID: FOUND NEW>\n");}
+discrete_argument:
+	NSTRING						{printf("\t<FUNCTION CALL ARGUMENTS : NSTRING>\n");}
+	|STRING						{printf("\t<FUNCTION CALL ARGUMENTS : STRING>\n");}
+	|VARNAME					{printf("\t<FUNCTION CALL ARGUMENTS : VARNAME>\n");}
+	|ARGVAR						{printf("\t<FUNCTION CALL ARGUMENTS : ARGVAR>\n");}
+	|MELNAME					{printf("\t<FUNCTION CALL ARGUMENTS : MELNAME>\n");}
+	|functioncall					{printf("\t<FUNCTION CALL ARGUMENTS : FUNCTIONCALL>\n");}
 	;
 
-last_funccallarg:
-	NSTRING						{printf("\t<FUNCTION CALL ARGUMENTS LAST: NSTRING>\n");}
-	|STRING						{printf("\t<FUNCTION CALL ARGUMENTS LAST: STRING>\n");}
-	|VARNAME					{printf("\t<FUNCTION CALL ARGUMENTS LAST: VARNAME>\n");}
-	|ARGVAR						{printf("\t<FUNCTION CALL ARGUMENTS LAST: ARGVAR>\n");}
-	|MELNAME					{printf("\t<FUNCTION CALL ARGUMENTS LAST: MELNAME>\n");}
-	|functioncall					{printf("\t<FUNCTION CALL ARGUMENTS LAST: FUNCTIONCALL>\n");}
-	;
 
-iterative_constructs:
-	whileloop					{printf("\t<ITERATIVE CONSTRUCTS: WHILE LOOP>\n");}
-	;
-
+/* Iterative while */
 whileloop:
 	WHILE PARANOPEN conditions PARANCLOSE enclosement	{printf("\t<WHILE LOOP>\n");}
-	;
-
-arithmetic_expr:
-	PARANOPEN arithmetic_expr PARANCLOSE		{printf("\t<ARITHMETIC EXPR: PARANOPEN ARITHEXP PARANCLOSE>\n");}
-	|arithmetic_expr ADD arithmetic_expr2		{printf("\t<ARITHMETIC EXPR: ARITHEXP ADD ARITHEXP2>\n");}
-	|arithmetic_expr SUB arithmetic_expr2		{printf("\t<ARITHMETIC EXPR: ARITHEXP SUB ARITHEXP2>\n");}
-	|arithmetic_expr2				{printf("\t<ARITHMETIC EXPR: ARITHEXP2>\n");}
-	;
-
-arithmetic_expr2:
-	arithmetic_expr2 MUL arithmetic_expr3		{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 MUL ARITHEXPR3>\n");}
-	|arithmetic_expr2 DIV arithmetic_expr3		{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 DIV ARITHEXPR3>\n");}
-	|arithmetic_expr2 TRUNCDIV arithmetic_expr3	{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 TRUNCDIV ARITHEXPR3>\n");}
-	|arithmetic_expr3				{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR3>\n");}
-	;
-
-arithmetic_expr3:
-	PARANOPEN arithmetic_expr PARANCLOSE		{printf("\t<ARITHMETIC EXPR 3: BRACKETS>\n");}
-	|variablename					{printf("\t<ARITHMETIC EXPR 3: VARIABLENAME>\n");}
-	|NSTRING					{printf("\t<ARITHMETIC EXPR 3: NSTRING>\n");}
-	|STRING						{printf("\t<ARITHMETIC EXPR 3: STRING>\n");}
-	|SHELLECHO					{printf("\t<ARITHMETIC EXPR 3: SHELLECHO>\n");}
-	|functioncall					{printf("\t<ARITHMETIC EXPR 3: FUNCTIONCALL>\n");}
 	;
 
 /*alltokens: IS|RETURN|BREAK|CONTINUE|FOR|ADD|INCR|SUB|DECR|MUL|EXP|DIV|TRUNCDIV|MAPDECL|VARDECL|VARNAME|MELNAME|ARGVAR|NSTRING|GSTRING|STRING|BROPEN|BRCLOSE|SHELLECHO|FUNC|IF|ELIF|ELSE|WHILE|EOS|PARANOPEN|PARANCLOSE|ASSIGN|FUNCCALL|COMMA|GT|LT|EQ|NQ|GE|LAND|LOR|LE|ERR|EOL;*/
