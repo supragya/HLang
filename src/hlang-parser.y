@@ -27,7 +27,7 @@
 script:
 	%empty
 	|script function
-	/*|script alltokens*/
+	/*|script alltokens    /* FOR DEBUGGING PROCESS    */
 	;
 
 function:
@@ -44,7 +44,7 @@ enclosement:
 
 code:
 	%empty
-	|code variable_declarations 			{printf("\t<CODE: VARIABLE DECLARATIONS>\n");}
+	|code variable_declarations  EOS		{printf("\t<CODE: VARIABLE DECLARATIONS>\n");}
 	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n");}
 	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
 	|code SHELLECHO	EOS				{printf("\t<CODE: SHELL ECHO>\n");}
@@ -53,8 +53,8 @@ code:
 	;
 
 variable_declarations:
-	mapvariables_declaration EOS			{printf("\t<VARIABLE DECLARATIONS: MAP>\n");}
-	|generalvariables_declaration EOS		{printf("\t<VARIABLE DECLARATIONS: GEN>\n");}
+	mapvariables_declaration			{printf("\t<VARIABLE DECLARATIONS: MAP>\n");}
+	|generalvariables_declaration		{printf("\t<VARIABLE DECLARATIONS: GEN>\n");}
 	;
 
 /* Map variables declaration code syntax */
@@ -98,26 +98,17 @@ midvariables_gen:
 
 lastvariable_gen:
 	variablename					{printf("\t<LASTVARIABLE GEN: VARNAME>\n");}
-	|variablename ASSIGN assignval			{printf("\t<LASTVARIABLE GEN: VARNAME ASSIGN ASSIGNVAL: %s>\n", $3);}
-	;
-
-assignval:
-	STRING						{printf("\t<ASSIGNVAL STRING>\n");}
-	|NSTRING					{printf("\t<ASSIGNVAL NSTRING>\n");}
-	|VARNAME					{printf("\t<ASSIGNVAL VARNAME>\n");}
-	|ARGVAR						{printf("\t<ASSIGNVAL ARGVAR>\n");}
-	|SHELLECHO					{printf("\t<ASSIGNVAL SHELLECHO\n");}
-	|functioncall					{printf("\t<ASSIGNVAL FUNCTIONCALL>\n");}
-	|arithmetic_expr				{printf("\t<ASSIGNVAL ARITHMETIC EXPR>\n");}
+	|variablename ASSIGN arithmetic_expr			{printf("\t<LASTVARIABLE GEN: VARNAME ASSIGN ASSIGNVAL: %s>\n", $3);}
 	;
 
 variablename:
 	VARNAME						{printf("\t<VARIABLENAME:%s>\n",yylval);}
 	|MELNAME					{printf("\t<MELNAME:%s>\n",yylval);}
+	|ARGVAR						{printf("\t<ARGVAR:%s>\n",yylval);}
 	;
 
 variable_assignment:
-	variablename ASSIGN assignval			{printf("\t<VARIABLE ASSIGNMENT: VARAIBLENAME ASSIGN ASSIGNVAL>\n");}
+	variablename ASSIGN arithmetic_expr		{printf("\t<VARIABLE ASSIGNMENT: VARAIBLENAME ASSIGN ASSIGNVAL>\n");}
 	;
 
 selective_constructs:
@@ -214,7 +205,26 @@ whileloop:
 	;
 
 arithmetic_expr:
-	variablename ADD NSTRING			{printf("\t<ARITHMETIC EXPR: VARIABLENAME ADD VARIABLENAME>\n");}
+	PARANOPEN arithmetic_expr PARANCLOSE		{printf("\t<ARITHMETIC EXPR: PARANOPEN ARITHEXP PARANCLOSE>\n");}
+	|arithmetic_expr ADD arithmetic_expr2		{printf("\t<ARITHMETIC EXPR: ARITHEXP ADD ARITHEXP2>\n");}
+	|arithmetic_expr SUB arithmetic_expr2		{printf("\t<ARITHMETIC EXPR: ARITHEXP SUB ARITHEXP2>\n");}
+	|arithmetic_expr2				{printf("\t<ARITHMETIC EXPR: ARITHEXP2>\n");}
+	;
+
+arithmetic_expr2:
+	arithmetic_expr2 MUL arithmetic_expr3		{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 MUL ARITHEXPR3>\n");}
+	|arithmetic_expr2 DIV arithmetic_expr3		{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 DIV ARITHEXPR3>\n");}
+	|arithmetic_expr2 TRUNCDIV arithmetic_expr3	{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR2 TRUNCDIV ARITHEXPR3>\n");}
+	|arithmetic_expr3				{printf("\t<ARITHMETIC EXPR 2: ARITHEXPR3>\n");}
+	;
+
+arithmetic_expr3:
+	PARANOPEN arithmetic_expr PARANCLOSE		{printf("\t<ARITHMETIC EXPR 3: BRACKETS>\n");}
+	|variablename					{printf("\t<ARITHMETIC EXPR 3: VARIABLENAME>\n");}
+	|NSTRING					{printf("\t<ARITHMETIC EXPR 3: NSTRING>\n");}
+	|STRING						{printf("\t<ARITHMETIC EXPR 3: STRING>\n");}
+	|SHELLECHO					{printf("\t<ARITHMETIC EXPR 3: SHELLECHO>\n");}
+	|functioncall					{printf("\t<ARITHMETIC EXPR 3: FUNCTIONCALL>\n");}
 	;
 
 /*alltokens: IS|RETURN|BREAK|CONTINUE|FOR|ADD|INCR|SUB|DECR|MUL|EXP|DIV|TRUNCDIV|MAPDECL|VARDECL|VARNAME|MELNAME|ARGVAR|NSTRING|GSTRING|STRING|BROPEN|BRCLOSE|SHELLECHO|FUNC|IF|ELIF|ELSE|WHILE|EOS|PARANOPEN|PARANCLOSE|ASSIGN|FUNCCALL|COMMA|GT|LT|EQ|NQ|GE|LAND|LOR|LE|ERR|EOL;*/
