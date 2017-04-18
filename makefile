@@ -3,7 +3,7 @@ bin/HLang-interpreter:	src/main.c src/variable_mgmt.c src/hlang-lexer.l src/hlan
 	@echo "|  MAKE: HLang Interpreter Builder   |"
 	@echo "+------------------------------------+"
 	-mkdir build/ headers/ bin/
-	bison --defines=headers/buildtime_hlang-parser.h --output=build/hlang-parser.c src/hlang-parser.y --language=c
+	bison -v --defines=headers/buildtime_hlang-parser.h --output=build/hlang-parser.c src/hlang-parser.y --language=c
 	flex --header-file=headers/buildtime_hlang-lexer.h -o build/hlang-lexer.c src/hlang-lexer.l
 	gcc -o $@ src/main.c src/variable_mgmt.c build/hlang-parser.c build/hlang-lexer.c -lfl -I headers/ -std=gnu99
 
