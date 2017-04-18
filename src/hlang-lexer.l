@@ -50,6 +50,7 @@ int has_lval(int);
 [/]							{printf("[divide]\n"); return DIV;}
 [/]{2}							{printf("[truncdiv]\n"); return TRUNCDIV;}
 
+[!]							{printf("[exclamation]\n");return EXCLAMATION;}
 [=]							{printf("[assign]\n");return ASSIGN;}
 [;]							{printf("[eos]\n"); return EOS;}
 [,]							{printf("[comma]\n");return COMMA;}
