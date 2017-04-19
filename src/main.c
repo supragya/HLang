@@ -35,7 +35,7 @@ int main(char **argv){
 	/* Iterate through all the tests */
 	unsigned int i = 0;
 	while(strcmp(testset[i],"")){
-		printf("\n>>>PARSING FILE \"%s\"\n", testset[i]);
+		printf("\n>>>PARSING FILE \"%s\"===============================================\n", testset[i]);
 		if(set_read_file(testset[i]))
 			return 1; //Cannot find file
 		else
