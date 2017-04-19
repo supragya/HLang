@@ -4,7 +4,6 @@ function main {
 	declare $var1, $_new = "vals";
 	declare map $mapvar, $2mapvar = {"key1" is "apple", "key2" is "oranges", "key3" is "beans"};
 	$2mapvar[0] = "purple";
-	$2mapvar[1] = red;
 
 	# I am calling a new function now
 	$var1 = foo($var1);
