@@ -8,7 +8,7 @@ function main {
 	# I am calling a new function now
 	$var1 = foo($var1);
 
-	for($var1 = 0; $var1 <= 200; $var1++){}
+	for($var1 = 0; $var1 <= 200 && 900 != 200; $var1++){}
 	while($var1 != 0){
 		$var1--;
 	}
