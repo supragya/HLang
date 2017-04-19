@@ -53,16 +53,31 @@ sequential_constuct:
 	|generalvariables_declaration EOS		{printf("\t<SEQUENTIAL CONSTRUCT: GEN VARIABLE DECLARATIONS>\n");}
 	|SHELLECHO EOS					{printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n");}
 	|functioncall EOS				{printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n");}
-	//|code variable_assignment EOS			{printf("\t<CODE: VARIABLE ASSIGNMENT>\n");}
+	|assignments EOS				{printf("\t<SEQUENTIAL CONSTRUCT: VARIABLE ASSIGNMENT>\n");}
+	|return_statement EOS				{printf("\t<SEQUENTIAL CONSTRUCT: RETURN STATEMENT>\n");}
 	;
 
 selective_constructs:
-	//TODO: work
-	MELNAME
+	ifblock elseifblocks elseblock			{printf("\t<SELECTIVE: IF ELSEIF ELSE BLOCKS>\n");}
+	|ifblock elseifblocks				{printf("\t<SELECTIVE: IF ELSEIF BLOCKS>\n");}
+	|ifblock elseblock				{printf("\t<SELECTIVE: IF ELSE BLOCKS>\n");}
+	|ifblock					{printf("\t<SELECTIVE: IF ONLY BLOCK>\n");}
+	;
+
+ifblock:
+	IF PARANOPEN conditions PARANCLOSE enclosement	{printf("\t<IF BLOCK>\n");}
+
+elseblock:
+	ELSE enclosement				{printf("\t<ELSE BLOCK>\n");}
+
+elseifblocks:
+	ELIF PARANOPEN conditions PARANCLOSE enclosement		{printf("\t<ELSEIF BLOCK: ONE>\n");}
+	|elseifblocks ELIF PARANOPEN conditions PARANCLOSE enclosement	{printf("\t<ELSEIF BLOCK: RECURSIVE>\n");}
 	;
 
 iterative_constructs:
 	whileloop					{printf("\t<ITERATIVE CONSTRUCTS: WHILE LOOP>\n");}
+	|forloop					{printf("\t<ITERATIVE CONSTRUCTS: FOR LOOP>\n");}
 	;
 
 
@@ -77,7 +92,7 @@ map_variablelist:
 	|map_variablelist COMMA map_discrete_variable	{printf("\t<MAPVARIABLELIST: COMMA DISCRETE>\n");}
 	;
 
-map_discrete_variable: // 1 SR conflict
+map_discrete_variable:
 	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND>\n");}
 	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS>\n");}
 	;
@@ -96,7 +111,6 @@ datatype:
 	STRING						{printf("\t<DATATYPE: STRING>\n");}
 	|NSTRING					{printf("\t<DATATYPE: NSTRING>\n");}
 	;
-
 
 
 
@@ -119,6 +133,24 @@ gen_discrete_variable:
 
 
 
+/* Variable assignment sequential constructs */
+assignments:
+	VARNAME ASSIGN expression			{printf("\t<ASSIGNMENT: VARNAME ASSIGN EXPRESSION>\n");}
+	|MELNAME ASSIGN expression			{printf("\t<ASSIGNMENT: MELNAME ASSIGN EXPRESSION>\n");}
+	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{printf("\t<ASSIGNMENT: VARNAME ASSIGN KEYVALPAIRS>\n");}
+	|unaryop assignmentvar				{printf("\t<ASSIGNMENT: PRE OPERATION>\n");}
+	|assignmentvar unaryop				{printf("\t<ASSIGNMENT: POST OPERATION>\n");}
+	;
+
+assignmentvar:
+	VARNAME						{printf("\t<ASSIGNMENTVAR: VARNAME>\n");}
+	|MELNAME					{printf("\t<ASSIGNMENTVAR: MELNAME>\n");}
+	;
+
+unaryop:
+	DECR						{printf("\t<ASSIGNMENTVAR: DECREMENT>\n");}
+	|INCR						{printf("\t<ASSIGNMENTVAR: INCREMENT>\n");}
+	;
 
 
 
@@ -167,8 +199,6 @@ discrete_term:
 
 
 
-
-
 /* Boolean conditions set */
 conditions:
 	conditions_and_only				{printf("\t<CONDITIONS: AND ONLY CONDITION>\n");}
@@ -209,6 +239,7 @@ relopr:
 	;
 
 
+
 /* Functioncall set */
 functioncall:
 	GSTRING PARANOPEN funccallargs PARANCLOSE	{printf("\t<FUNCTION CALL>\n");}
@@ -228,10 +259,33 @@ discrete_argument:
 	|functioncall					{printf("\t<FUNCTION CALL ARGUMENTS : FUNCTIONCALL>\n");}
 	;
 
+/* Return statement */
+return_statement: //TODO: more rules
+	RETURN VARNAME
+	;
+
 
 /* Iterative while */
 whileloop:
 	WHILE PARANOPEN conditions PARANCLOSE enclosement	{printf("\t<WHILE LOOP>\n");}
+	;
+
+
+/* Iterative for */
+forloop: //TODO: more rules
+	FOR PARANOPEN forinit EOS conditions EOS forvarmodif PARANCLOSE enclosement	{printf("\t<FOR LOOP>\n");}
+	;
+
+forinit:
+	%empty						{printf("\t<FORINIT: EMPTY>\n");}
+	|generalvariables_declaration			{printf("\t<FORINIT: GENVARIABLES DECLARATIONS>\n");}
+	|mapvariables_declaration			{printf("\t<FORINIT: MAPVARIABLES DECLARATIONS>\n");}
+	|assignments					{printf("\t<FORINIT: ASSIGNMENTS>\n");}
+	;
+
+forvarmodif:
+	%empty						{printf("\t<FORVARMODIF: EMPTY>\n");}
+	|assignments					{printf("\t<FORVARMODIF: ASSIGNMENTS>\n");}
 	;
 
 /*alltokens: IS|RETURN|BREAK|CONTINUE|FOR|ADD|INCR|SUB|DECR|MUL|EXP|DIV|TRUNCDIV|MAPDECL|VARDECL|VARNAME|MELNAME|ARGVAR|NSTRING|GSTRING|STRING|BROPEN|BRCLOSE|SHELLECHO|FUNC|IF|ELIF|ELSE|WHILE|EOS|PARANOPEN|PARANCLOSE|ASSIGN|FUNCCALL|COMMA|GT|LT|EQ|NQ|GE|LAND|LOR|LE|ERR|EOL;*/
