@@ -46,6 +46,9 @@ code:
 	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
 	;
 
+
+
+
 /* Different constructs */
 
 sequential_constuct:
@@ -100,6 +103,8 @@ map_discrete_variable:
 keyvalpairs:
 	keytype IS datatype				{printf("\t<KEYVALPAIRS: FOUND DISCRETE>\n");}
 	|keyvalpairs COMMA keytype IS datatype		{printf("\t<KEYVALPAIRS: FOUND COMMA>\n");}
+	|datatype					{printf("\t<KEYVALPAIRS: FOUND JUST DATATYPE>\n");}
+	|keyvalpairs COMMA datatype			{printf("\t<KEYVALPAIRS: FOUND COMMA JUST DATATYPE>\n");}
 	;
 
 keytype:
@@ -181,10 +186,10 @@ expr_unary_preceder:
 	;
 
 expr_successor:
-	%empty							{printf("\t<EXPR SUCCESSOR: NONE>\n");}
-	|EXCLAMATION						{printf("\t<EXPR SUCCESSOR: FACTORIAL>\n");}
-	|EXP discrete_term					{printf("\t<EXPR SUCCESSOR: EXPONENTIAL>\n");}
-	|EXP PARANOPEN expression PARANCLOSE			{printf("\t<EXPR SUCCESSOR: EXPONENTIAL EXPR>\n");}
+	%empty							{printf("\t<EXPR UNARY SUCC: NONE>\n");}
+	|EXCLAMATION						{printf("\t<EXPR UNARY SUCC: FACTORIAL>\n");}
+	|EXP discrete_term					{printf("\t<EXPR UNARY SUCC: EXPONENTIAL>\n");}
+	|EXP PARANOPEN expression PARANCLOSE			{printf("\t<EXPR UNARY SUCC: EXPONENTIAL EXPR>\n");}
 	;
 
 discrete_term:
@@ -260,8 +265,9 @@ discrete_argument:
 	;
 
 /* Return statement */
-return_statement: //TODO: more rules
-	RETURN VARNAME
+return_statement:
+	RETURN BROPEN keyvalpairs BRCLOSE	{printf("\t<RETURN KEYVALPAIRS>\n");}
+	|RETURN expression			{printf("\t<RETURN EXPRESSION>\n");}
 	;
 
 
@@ -272,7 +278,7 @@ whileloop:
 
 
 /* Iterative for */
-forloop: //TODO: more rules
+forloop:
 	FOR PARANOPEN forinit EOS conditions EOS forvarmodif PARANCLOSE enclosement	{printf("\t<FOR LOOP>\n");}
 	;
 
