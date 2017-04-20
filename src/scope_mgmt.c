@@ -1,6 +1,7 @@
 /* HLang Scope management subystem
  * created by Supragya Raj
  */
+ 
 #include <malloc.h>
 #include "scope_mgmt.h"
 #include "variable_mgmt.h"
