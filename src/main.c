@@ -8,6 +8,7 @@
 #include "hlang-lexer.h"
 #include "version.h"
 #include "variable_mgmt.h"
+#include "scope_mgmt.h"
 #define DATABUFLEN 2000
 
 /* Function declarations */
@@ -20,6 +21,10 @@ int main(char **argv){
 
 	if (!vms_init()){
 		printf(">>>Error: Cannot initialise variable management subsystem\n");
+		return 1;
+	}
+	if (!sms_init()){
+		printf(">>>Error: Cannot initialise scope management subsystem\n");
 		return 1;
 	}
 
