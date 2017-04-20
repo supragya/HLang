@@ -32,7 +32,7 @@ script:
 	;
 
 function:
-	FUNC enclosement				{printf("\t<FUNCTION>\n");}
+	FUNC enclosement				{printf("\t<FUNCTION>\n"); vms_decommission_scope(0);}
 	;
 
 enclosement:
@@ -135,8 +135,11 @@ gen_discrete_variable:
 							variable_ptr_t current = vms_add_new_variable($1, 0);
 							vms_assign_to_bin_location(current, $3);
 							}
-	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME>\n");}
-	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION>\n");}
+	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME| New mapelement %s>\n", $1); vms_add_new_mapelement($1, 0);}
+	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION| New element %s with val %s>\n",$1, $3);
+							variable_ptr_t current = vms_add_new_mapelement($1, 0);
+							vms_assign_to_bin_location(current, $3);
+							}
 	;
 
 
