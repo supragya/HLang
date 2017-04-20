@@ -19,11 +19,11 @@ int main(char **argv){
 	/* Print welcome message on screen */
 	welcome();
 
-	if (!vms_init()){
+	if (vms_init()){
 		printf(">>>Error: Cannot initialise variable management subsystem\n");
 		return 1;
 	}
-	if (!sms_init()){
+	if (sms_init()){
 		printf(">>>Error: Cannot initialise scope management subsystem\n");
 		return 1;
 	}
