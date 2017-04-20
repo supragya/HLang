@@ -50,6 +50,23 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	}
 }
 
+variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope){
+	unsigned int len = strlen(mapelementname);
+	char *mapname = malloc(sizeof(char)*(len+1));
+	strcpy(mapname, mapelementname);
+	unsigned int i;
+	for(i=0; i<len && mapname[i] != '['; i++);
+	mapname[i] = '\0';
+	printf(":VMS: Map element storage with mapname: %s\n", mapname);
+	if(!vms_is_mapname_exists(mapname, scope)){
+		printf(";VMS: [Error] Assigning map element of undefined map\n");
+		return TOTAL_SLOTS;
+	}
+	else{
+		return vms_add_new_variable(mapelementname, scope);
+	}
+}
+
 int vms_add_new_map(char *new_varname, unsigned int scope){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
@@ -140,7 +157,7 @@ int vms_init(){
 
 void vms_display_variable_table(){
 
-	printf(":VMS: --VARIABLE TABLE--\n");
+	printf("<<<<<<<<<<<<<<<< :VMS: VARIABLE TABLE >>>>>>>>>>>>>>>>>>>>>>>\n");
 	unsigned int i;
 	while (i!=TOTAL_SLOTS){
 		if(storage[i].occupation == AVAILABLE)
@@ -150,12 +167,13 @@ void vms_display_variable_table(){
 		}
 		i++;
 	}
+	printf("------------------------------------------------------------\n");
 }
 
 void vms_display_map_list(){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
-	printf(":VMS: --MAP LIST--\n");
+	printf("<<<<<<<<<<<<<<<< :VMS: MAP LIST >>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 
 	if(tempptr == NULL){
 		printf("(NULL)\n");
@@ -167,6 +185,7 @@ void vms_display_map_list(){
 		}
 		printf("\n");
 	}
+	printf("------------------------------------------------------------\n");
 }
 
 int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
@@ -181,7 +200,7 @@ int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
 }
 
 void vms_decommission_scope(unsigned int scope){
-	printf(":VMS Decommisssion scope %d\n", scope);
+	printf(":VMS Decommission scope %d\n", scope);
 	/* Decommission from variable table */
 	unsigned int i = 0;
 	while (i!=TOTAL_SLOTS){
@@ -221,4 +240,18 @@ void vms_decommission_scope(unsigned int scope){
 
 	vms_display_map_list();
 	vms_display_variable_table();
+}
+
+int vms_is_mapname_exists(char *mapname, unsigned int scope){
+	printf(":VMS: is mapname exists\n");
+	vms_display_map_list();
+	struct map_list *tempptr;
+	tempptr = mapliststart;
+	while(tempptr != NULL){
+		if(!strcmp(tempptr->mapname, mapname) && tempptr->scope == scope){
+			return 1;
+		}
+		tempptr = tempptr->next;
+	}
+	return 0;
 }
