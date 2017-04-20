@@ -3,5 +3,7 @@ function main{
 	declare $newunknown;
 	declare $num = 10;
 	declare map $mapvar, $mapvar2, $mapvar3;
+	declare $mapvar[0];
+	declare $mapvvv[1];
 	declare $stringvar = "randomstr", $var ="stringvalues", $var2=30;
 }
