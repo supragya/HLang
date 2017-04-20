@@ -1,5 +1,6 @@
 function foo{}
 function main{
+	declare $newunknown;
 	declare $num = 10;
 	declare $mapvar =20;
 	declare $stringvar = "randomstr", $var ="stringvalues", $var2=30;
