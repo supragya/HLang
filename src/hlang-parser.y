@@ -130,8 +130,11 @@ gen_variablelist:
 	;
 
 gen_discrete_variable:
-	VARNAME						{printf("\t<GEN DISCRETE VARIABLE: VARNAME>\n");}
-	|VARNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION>\n");}
+	VARNAME						{printf("\t<GEN DISCRETE VARIABLE: VARNAME| New variable %s>\n", $1); vms_add_new_variable($1, 0);}
+	|VARNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION| New variable %s with value %s>\n", $1, $3);
+							variable_ptr_t current = vms_add_new_variable($1, 0);
+							vms_assign_to_bin_location(current, $3);
+							}
 	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME>\n");}
 	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION>\n");}
 	;
@@ -175,8 +178,8 @@ expression2:
 	;
 
 expression3:
-	expr_unary_preceder PARANOPEN expression PARANCLOSE expr_successor	{printf("\t<EXPRESSION3: UNARYPREC EXPRESSION EXPRSUCC>\n");}
-	|expr_unary_preceder discrete_term expr_successor	{printf("\t<EXPRESSION3: UNARYPREC TERM EXPRSUCC>\n");}
+	expr_unary_preceder PARANOPEN expression PARANCLOSE expr_successor	{$$ = $3; printf("\t<EXPRESSION3: UNARYPREC EXPRESSION EXPRSUCC>\n");}
+	|expr_unary_preceder discrete_term expr_successor	{$$ = $2; printf("\t<EXPRESSION3: UNARYPREC TERM EXPRSUCC>\n");}
 	;
 
 expr_unary_preceder:
