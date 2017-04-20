@@ -14,7 +14,7 @@ struct map_list *mapliststart = NULL;
 
 variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	/* Testing whether the combination already exists or not */
-	if(1){
+	if(!vms_is_already_declared_variable(new_varname, scope)){
 		/* Find integer position where the variable will be stored */
 		unsigned long position = 0;
 		if(locations_available !=0){
@@ -166,4 +166,58 @@ void vms_display_map_list(){
 		}
 		printf("\n");
 	}
+}
+
+int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
+	unsigned int i = 0;
+	while (i!=TOTAL_SLOTS){
+		if(storage[i].occupation == OCCUPIED)
+			if(!strcmp(new_varname, storage[i].name) && storage[i].scope == scope)
+				return 1;
+		i++;
+	}
+	return 0;
+}
+
+void vms_decommission_scope(unsigned int scope){
+	printf(":VMS Decommisssion scope %d\n", scope);
+	/* Decommission from variable table */
+	unsigned int i = 0;
+	while (i!=TOTAL_SLOTS){
+		if(storage[i].scope == scope)
+			storage[i].occupation = AVAILABLE;
+		i++;
+	}
+
+	/* Decommission from map list */
+
+	struct map_list *tempvar, *link_handle;
+	tempvar = mapliststart;
+
+	if(tempvar == NULL);
+	else{
+		while(tempvar != NULL && tempvar->scope == scope){
+			mapliststart = mapliststart->next;
+			free(tempvar);
+			tempvar = mapliststart;
+		}
+		if(tempvar != NULL){
+			while(tempvar != NULL){
+				link_handle = mapliststart;
+				if(tempvar->scope == scope){
+					link_handle->next = tempvar->next;
+					free(tempvar);
+					tempvar = link_handle->next;
+				}
+				else{
+					tempvar = tempvar->next;
+					link_handle = link_handle->next;
+				}
+			}
+		}
+	}
+
+
+	vms_display_map_list();
+	vms_display_variable_table();
 }

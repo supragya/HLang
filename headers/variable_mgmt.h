@@ -48,13 +48,7 @@ unsigned long vms_calchash(char *varname);
  */
 void vms_assign_to_bin_location(variable_ptr_t var, char *str);
 
-/** @brief	Assign a given variable name with a given scope with string
- *  @param	varname		variable name
- *  @param	scope		scope of the variable
- *  @param	str		string to save
- */
-void vms_assign_to_varname(char *varname, unsigned int scope, char *str);
-
+/** @brief	Assig
 /** @brief	Finds variable with a given scope in the storage bin
  *  @param	varname		variable name
  *  @param	scope		scope of the variable to be found out
@@ -66,3 +60,5 @@ int vms_init();
 void vms_display_variable_table();
 int vms_add_new_map(char *new_varname, unsigned int scope);
 void vms_display_map_list();
+int vms_is_already_declared_variable(char *new_varname, unsigned int scope);
+void vms_decommission_scope(unsigned int scope);
