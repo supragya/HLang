@@ -9,8 +9,6 @@
 #include "buildtime_hlang-parser.h"
 #include "hlang-lexer.h"
 
-char *yylval;
-
 void yyclean();
 void yyappend(char *);
 int has_lval(int);
@@ -18,16 +16,16 @@ int has_lval(int);
 
 %%
 
-"declare"[ \t\n]*"map"					{printf("[mapdecl]\n");return MAPDECL;}
 "declare"						{printf("[vardecl]\n");return VARDECL;}
 "return"						{printf("[return]\n");return RETURN;}
+"declare"[ \t\n]*"map"					{printf("[mapdecl]\n");return MAPDECL;}
 "break"							{printf("[break]\n");return BREAK;}
 "continue"						{printf("[continue]\n");return CONTINUE;}
 "for"							{printf("[for]\n");return FOR;}
 "if"							{printf("[if]\n");return IF;}
 "elif"							{printf("[elif]\n");return ELIF;}
-"else"							{printf("[else]\n");return ELSE;}
 "while"							{printf("[while]\n");return WHILE;}
+"else"							{printf("[else]\n");return ELSE;}
 "is"							{printf("[is]\n"); return IS;}
 
 
@@ -80,7 +78,7 @@ int has_lval(int);
 <_MLCMNT><<EOF>>					/* Error, but treat as if nothing happened */
 <_MLCMNT>"*#"						{BEGIN INITIAL;}
 
-([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); printf("[string|%s]\n",yylval);return NSTRING;}
+([0-9]+|[0-9]+[.][0-9]*|[.][0-9]+)			{yyclean(); yyappend(yytext); printf("[nstring|%s]\n",yylval);return NSTRING;}
 
 [_a-zA-Z0-9]+						{yyclean(); yyappend(yytext); printf("[genstring]%s\n",yylval); return GSTRING;}
 
@@ -104,6 +102,7 @@ int set_read_file(char *filename){
 
 void yyclean(){
 	/*Cleans a given string, just adds '\0' in the 0th position */
+	yylval = malloc(sizeof(char)*3000);
 	yylval[0] = '\0';
 }
 
