@@ -7,6 +7,7 @@
 #include "buildtime_hlang-lexer.h"
 #include "hlang-lexer.h"
 #include "version.h"
+#include "variable_mgmt.h"
 #define DATABUFLEN 2000
 
 /* Function declarations */
@@ -17,20 +18,21 @@ int main(char **argv){
 	/* Print welcome message on screen */
 	welcome();
 
+	if (!vms_init()){
+		printf(">>>Error: Cannot initialise variable management subsystem\n");
+		return 1;
+	}
+
 	/* Allocate yylval legit space */
 	yylval = malloc(sizeof(char)*DATABUFLEN);
 	if(!yylval){
-		printf("No memory for yylval\n");
+		printf(">>>No memory for yylval\n");
 		return 1;
 	}
 
 	/* Test files list */
 	char testset[][100] = {	"tests/variable_declarations.hl",
-				"tests/selections.hl",
-				"tests/functions.hl",
-				"tests/comments.hl",
-				"tests/elastic_horse_regressions.hl",
-				"tests/full_test.hl"
+
 				"" };
 	/* Iterate through all the tests */
 	unsigned int i = 0;
