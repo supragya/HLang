@@ -10,13 +10,13 @@ typedef struct{
 	occupation_t occupation;
 }variable_t;
 
-#define TOTAL_SLOTS 65537
+#define TOTAL_SLOTS 13
 #define H_ALPHA 3
 
 typedef unsigned long variable_ptr_t;
 
 /** @brief	Add new variable to storage bin
- *  @param 	new_varname	variable name to be stored 
+ *  @param 	new_varname	variable name to be stored
  *  @param	scope		scope number of the variable (defaults 0, file scope)i
  *  @return	Variable storage location in the storage bin
  */
@@ -55,3 +55,6 @@ void vms_assign_to_varname(char *varname, unsigned int scope, char *str);
  *  @return	location in storage bin where the variable is stored. If not found, TOTAL_SLOT is returned
  */
 variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);
+
+int vms_init();
+void display_vms_status();

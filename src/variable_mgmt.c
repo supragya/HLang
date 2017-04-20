@@ -1,7 +1,8 @@
 /* HLang variable management service
  * created by Supragya Raj
  */
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "buildtime_hlang-parser.h"
 #include "hlang-parser.h"
@@ -15,22 +16,30 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	if(1){
 		/* Find integer position where the variable will be stored */
 		unsigned long position = 0;
-		if(locations_available !=0)
+		if(locations_available !=0){
 			/* We have locations available for variable storage */
 			position = vms_find_valid_location(new_varname);
-		else
+			printf(":VMS: For %s, the position is: %ld\n", new_varname, position);
+		}
+		else{
 			/* Ran out of memory */
 			yyerror("Not enough memory to save variables");
+			return TOTAL_SLOTS;
+		}
 
 		/* Populating the variable data */
-		storage[position].name 		= new_varname;
-		storage[position].value		= NULL;
+		storage[position].name		= (char*)malloc(sizeof(char)*(strlen(new_varname)+1));
+		strcpy(storage[position].name, new_varname);
+		storage[position].value		= (char*)malloc(sizeof(char)*201);
+		strcpy(storage[position].value, "0");
 		storage[position].scope		= scope;
 		storage[position].occupation	= OCCUPIED;
 
 		/* Decrement the number of locations available by one */
 		locations_available--;
-		
+
+		display_vms_status();
+
 		return position;
 	}
 	else{
@@ -39,11 +48,10 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	}
 }
 
-
 unsigned long vms_find_valid_location(char *varname){
 	/* Find hashed location in the bin corresponding to varname */
 	unsigned long hashval = vms_calchash(varname);
-	
+
 	/* If the given location is available, return position, else find location with least positive offset */
 	while(storage[hashval].occupation == OCCUPIED)
 		hashval = (hashval+1)%TOTAL_SLOTS;
@@ -53,7 +61,7 @@ unsigned long vms_find_valid_location(char *varname){
 unsigned long vms_calchash(char *varname){
 	int len = strlen(varname);
 	unsigned int i = 0, temp;
-	unsigned int pos = 0;	
+	unsigned int pos = 0;
 
 	for(i = 0; i<len; i++){
 		/* ASCII character val */
@@ -85,7 +93,26 @@ variable_ptr_t vms_var_lookup(char* varname, unsigned int scope){
 	unsigned long ctr = TOTAL_SLOTS;
 	while(!(storage[hashval].occupation == OCCUPIED && !strcmp(storage[hashval].name, varname) && storage[hashval].scope == scope) && ctr)
 		ctr--;
-	
+
 	/* Check whether we have the required variable */
 	return (storage[hashval].occupation == OCCUPIED && !strcmp(storage[hashval].name, varname) && storage[hashval].scope == scope) ? hashval : TOTAL_SLOTS;
+}
+
+int vms_init(){
+	unsigned int i;
+	for(i = 0; i<TOTAL_SLOTS; i++)
+		storage[i].occupation = AVAILABLE;
+}
+
+void display_vms_status(){
+	printf(":VMS STATUS:\n");
+	unsigned int i;
+	while (i!=TOTAL_SLOTS){
+		if(storage[i].occupation == AVAILABLE)
+			printf("%d\tAVAILABLE \n", i);
+		else{
+			printf("%d\tNAME: %s | VALUE: %s | SCOPE: %d\n", i, storage[i].name, storage[i].value, storage[i].scope);
+		}
+		i++;
+	}
 }
