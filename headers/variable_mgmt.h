@@ -65,3 +65,4 @@ variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);
 int vms_init();
 void vms_display_variable_table();
 int vms_add_new_map(char *new_varname, unsigned int scope);
+void vms_display_map_list();
