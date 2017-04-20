@@ -96,7 +96,7 @@ map_variablelist:
 	;
 
 map_discrete_variable:
-	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND>\n");}
+	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND| %s>\n", $1); vms_add_new_map($1,0);}
 	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS>\n");}
 	;
 
