@@ -10,6 +10,7 @@
 unsigned long locations_available = TOTAL_SLOTS;
 
 variable_t storage[TOTAL_SLOTS];
+struct map_list *mapliststart = NULL;
 
 variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 	/* Testing whether the combination already exists or not */
@@ -38,7 +39,7 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		/* Decrement the number of locations available by one */
 		locations_available--;
 
-		display_vms_status();
+		vms_display_variable_table();
 
 		return position;
 	}
@@ -46,6 +47,30 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		yyerror("Variable declared twice");
 		return TOTAL_SLOTS;
 	}
+}
+
+int vms_add_new_map(char *new_varname, unsigned int scope){
+	struct map_list *tempptr;
+	tempptr = mapliststart;
+
+	printf(":VMS: Adding new map structure\n");
+
+	/* Check whether already declared */
+	while(tempptr != NULL){
+		if(!strcmp(tempptr->mapname, new_varname) && tempptr->scope == scope){
+			printf(":VMS: [Error] Already declared the map with name %s and scope %d\n", new_varname, scope);
+			return 1;
+		}
+	}
+
+	/* Ready to add map */
+	tempptr = (struct map_list*)malloc(sizeof(struct map_list));
+
+	strcpy(tempptr->mapname, new_varname);
+	tempptr->scope = scope;
+	tempptr->next = mapliststart;
+	mapliststart = tempptr;
+	return 0;
 }
 
 unsigned long vms_find_valid_location(char *varname){
@@ -74,11 +99,13 @@ unsigned long vms_calchash(char *varname){
 }
 
 void vms_assign_to_bin_location(variable_ptr_t var, char *str){
+	printf(":VMS: Bin location %ld is assigned %s\n", var, str);
 	if (var >= TOTAL_SLOTS)
 		yyerror("Undefined variable_ptr_t value");
 	else if(!storage[var].occupation == OCCUPIED)
 		yyerror("Assignment to undeclared variable!");
 	strcpy(storage[var].value, str);
+	vms_display_variable_table();
 }
 
 void vms_assign_to_varname(char *varname, unsigned int scope, char *str){
@@ -104,8 +131,9 @@ int vms_init(){
 		storage[i].occupation = AVAILABLE;
 }
 
-void display_vms_status(){
-	printf(":VMS STATUS:\n");
+void vms_display_variable_table(){
+
+	printf(":VMS: --VARIABLE TABLE--\n");
 	unsigned int i;
 	while (i!=TOTAL_SLOTS){
 		if(storage[i].occupation == AVAILABLE)

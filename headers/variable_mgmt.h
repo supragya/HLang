@@ -10,6 +10,12 @@ typedef struct{
 	occupation_t occupation;
 }variable_t;
 
+struct map_list{
+	char *mapname;
+	unsigned int scope;
+	struct map_list *next;
+};
+
 #define TOTAL_SLOTS 13
 #define H_ALPHA 3
 
@@ -57,4 +63,5 @@ void vms_assign_to_varname(char *varname, unsigned int scope, char *str);
 variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);
 
 int vms_init();
-void display_vms_status();
+void vms_display_variable_table();
+int vms_add_new_map(char *new_varname, unsigned int scope);
