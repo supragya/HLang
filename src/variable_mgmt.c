@@ -135,6 +135,7 @@ int vms_init(){
 	unsigned int i;
 	for(i = 0; i<TOTAL_SLOTS; i++)
 		storage[i].occupation = AVAILABLE;
+	return 0;
 }
 
 void vms_display_variable_table(){
