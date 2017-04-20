@@ -16,7 +16,7 @@ struct map_list{
 	struct map_list *next;
 };
 
-#define TOTAL_SLOTS 13
+#define TOTAL_SLOTS 7
 #define H_ALPHA 3
 
 typedef unsigned long variable_ptr_t;
@@ -56,9 +56,11 @@ void vms_assign_to_bin_location(variable_ptr_t var, char *str);
  */
 variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);
 
+variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope);
 int vms_init();
 void vms_display_variable_table();
 int vms_add_new_map(char *new_varname, unsigned int scope);
 void vms_display_map_list();
 int vms_is_already_declared_variable(char *new_varname, unsigned int scope);
 void vms_decommission_scope(unsigned int scope);
+int vms_is_mapname_exists(char *mapname, unsigned int scope);
