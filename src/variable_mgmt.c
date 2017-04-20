@@ -39,6 +39,7 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		/* Decrement the number of locations available by one */
 		locations_available--;
 
+		vms_display_map_list();
 		vms_display_variable_table();
 
 		return position;
@@ -61,11 +62,16 @@ int vms_add_new_map(char *new_varname, unsigned int scope){
 			printf(":VMS: [Error] Already declared the map with name %s and scope %d\n", new_varname, scope);
 			return 1;
 		}
+		tempptr = tempptr->next;
 	}
 
 	/* Ready to add map */
 	tempptr = (struct map_list*)malloc(sizeof(struct map_list));
-
+	if (!tempptr){
+		printf(":VMS: [Error] Cannot allocate memory for map variable\n");
+		return 1;
+	}
+	tempptr->mapname = malloc(sizeof(char)*(strlen(new_varname)+1));
 	strcpy(tempptr->mapname, new_varname);
 	tempptr->scope = scope;
 	tempptr->next = mapliststart;
@@ -142,5 +148,22 @@ void vms_display_variable_table(){
 			printf("%d\tNAME: %s | VALUE: %s | SCOPE: %d\n", i, storage[i].name, storage[i].value, storage[i].scope);
 		}
 		i++;
+	}
+}
+
+void vms_display_map_list(){
+	struct map_list *tempptr;
+	tempptr = mapliststart;
+	printf(":VMS: --MAP LIST--\n");
+
+	if(tempptr == NULL){
+		printf("(NULL)\n");
+	}
+	else{
+		while(tempptr != NULL){
+			printf("[%s,%d]", tempptr->mapname, tempptr->scope);
+			tempptr = tempptr->next;
+		}
+		printf("\n");
 	}
 }
