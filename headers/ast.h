@@ -1,6 +1,7 @@
 struct ast_function_node{
 	char *functionname;
 	struct ast_function_node *next;
+	struct ast_construct *executionlist;
 };
 
 struct ast_root_node{
@@ -66,4 +67,7 @@ struct ast_iterativenode{
 int ast_init();
 void ast_add_function(char *functionname);
 void* ast_add_seq(char *name);
-void ast_walk_constructs();
+void ast_walk_constructs(struct ast_construct *head);
+void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct);
+void ast_advanceto_next_selective_construct(struct ast_construct *temp_construct);
+void ast_advanceto_next_iterative_construct(struct ast_construct *temp_construct);

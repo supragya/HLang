@@ -34,13 +34,6 @@ int main(char **argv){
 		return 1;
 	}
 	/* Begin testing ast */
-	ast_add_seq("apples");
-	ast_add_seq("oranges");
-
-
-
-
-
 	/* Allocate yylval legit space */
 	yylval = malloc(sizeof(char)*DATABUFLEN);
 	if(!yylval){
