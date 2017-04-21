@@ -43,8 +43,8 @@ enclosement:
 code:
 	%empty
 	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq("Lauda lehsan");}
-	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n");}
-	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
+	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n"); ast_add_sel("jj");}
+	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n"); ast_add_iter("ii");}
 	;
 
 
