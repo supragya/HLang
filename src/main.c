@@ -9,6 +9,8 @@
 #include "version.h"
 #include "variable_mgmt.h"
 #include "scope_mgmt.h"
+#include "ast.h"
+
 #define DATABUFLEN 2000
 
 /* Function declarations */
@@ -27,6 +29,17 @@ int main(char **argv){
 		printf(">>>Error: Cannot initialise scope management subsystem\n");
 		return 1;
 	}
+	if (ast_init()){
+		printf(">>>Error: Cannot initialise abstract syntax tree\n");
+		return 1;
+	}
+	/* Begin testing ast */
+	ast_add_seq("apples");
+	ast_add_seq("oranges");
+
+
+
+
 
 	/* Allocate yylval legit space */
 	yylval = malloc(sizeof(char)*DATABUFLEN);
@@ -36,7 +49,7 @@ int main(char **argv){
 	}
 
 	/* Test files list */
-	char testset[][100] = {	"tests/variable_declarations.hl",
+	char testset[][100] = {	"tests/aux_test.hl",
 
 				"" };
 	/* Iterate through all the tests */
