@@ -7,6 +7,8 @@
 #include "ast.h"
 struct ast_root_node *rootnode;
 struct ast_construct *currentconstructhead;
+struct ast_sequentialnode *currentsequentialhead;
+struct keyvalpairs *currentkeyvalpairshead;
 
 int ast_init(){
 	rootnode = malloc(sizeof(struct ast_root_node));
@@ -16,6 +18,8 @@ int ast_init(){
 	rootnode->functions = NULL;
 	currentconstructhead->ctype = NONE;
 	currentconstructhead->ptr.selective = NULL;
+	currentsequentialhead = NULL;
+	currentkeyvalpairshead = NULL;
 	printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	return 0;
 }
@@ -63,12 +67,26 @@ void ast_add_seq(char *name){
 	newseqnode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newseqnode->name, name);
 	newseqnode->next.ctype = NONE;
-	// printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
-	printf(":AST: newseqnode made with name %s\n", newseqnode->name);
+	// if(currentsequentialhead != NULL){
+	// 	newseqnode->childtype = currentsequentialhead->childtype;
+	// 	switch(newseqnode->childtype){
+	// 		case AST_GENVARDECL: newseqnode->child.genvardecl = currentsequentialhead->child.genvardecl; break;
+	// 		case AST_MAPVARDECL: newseqnode->child.mapvardecl = currentsequentialhead->child.mapvardecl; break;
+	// 		case AST_ASSIGNMENTS: newseqnode->child.assignments = currentsequentialhead->child.assignments; break;
+	// 		case AST_RETURN: newseqnode->child._return = currentsequentialhead->child._return; break;
+	// 		case AST_SHELLECHO: newseqnode->child.shellecho = currentsequentialhead->child.shellecho; break;
+	// 		case AST_FUNCTIONCALL: newseqnode->child.functioncall = currentsequentialhead->child.functioncall; break;
+	// 	}
+	// 	//NOTE: free(currentsequentialhead); gives traversal error
+	// 	currentsequentialhead = NULL;
+	// 	// printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+	// 	// printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
+	// }
+	printf(":AST: newseqnode with name %s\n", newseqnode->name);
 	if(currentconstructhead->ctype == NONE){
 		currentconstructhead->ptr.sequential = newseqnode;
 		currentconstructhead->ctype = SEQUENTIAL;
-		// printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+		printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	}
 	else{
 		// printf("[AST]currentconstructhead was FULL\n");
@@ -81,7 +99,7 @@ void ast_add_seq(char *name){
 		if(currentconstructhead->ctype == ITERATIVE)
 			temp_construct->ptr.iterative = currentconstructhead->ptr.iterative;
 		// printf("temp_construct is ctype: %d\n", temp_construct->ctype);
-		unsigned int flag = 0;
+		unsigned int flag = 1;
 		while(flag){
 			switch (temp_construct->ctype) {
 				case SEQUENTIAL: //printf("at1\n");
@@ -97,13 +115,13 @@ void ast_add_seq(char *name){
 		}
 		/* Now we have temp_construct as the last element */
 		switch(temp_construct->ctype){
-			case SEQUENTIAL:temp_construct->ptr.sequential->next.ctype = SELECTIVE;
+			case SEQUENTIAL:temp_construct->ptr.sequential->next.ctype = SEQUENTIAL;
 					temp_construct->ptr.sequential->next.ptr.sequential = newseqnode;
 					break;
-			case SELECTIVE:temp_construct->ptr.selective->next.ctype = SELECTIVE;
+			case SELECTIVE:temp_construct->ptr.selective->next.ctype = SEQUENTIAL;
 					temp_construct->ptr.selective->next.ptr.sequential = newseqnode;
 					break;
-			case ITERATIVE:temp_construct->ptr.iterative->next.ctype = SELECTIVE;
+			case ITERATIVE:temp_construct->ptr.iterative->next.ctype = SEQUENTIAL;
 					temp_construct->ptr.iterative->next.ptr.sequential = newseqnode;
 					break;
 		}
@@ -234,7 +252,7 @@ void ast_walk_constructs(struct ast_construct *head){
 	if(head->ctype == ITERATIVE)
 		temp_construct->ptr.selective = head->ptr.selective;
 	unsigned int flag = 1;
-	while(flag && !temp_construct->ctype == NONE){
+	while(flag && temp_construct->ctype != NONE){
 		switch (temp_construct->ctype) {
 			case SEQUENTIAL: printf("[AST-SEQ]{%s}  ", temp_construct->ptr.sequential->name);
 					 ast_advanceto_next_sequential_construct(temp_construct, &flag);
@@ -248,6 +266,33 @@ void ast_walk_constructs(struct ast_construct *head){
 		}
 	}
 	printf("\n" );
+}
+
+void ast_add_seq_shellecho(char *echo){
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_SHELLECHO;
+	char *temp = malloc(sizeof(char)*(strlen(echo)+1));
+	strcpy(temp,echo);
+	currentsequentialhead->child.shellecho = malloc(sizeof(struct ast_sequential_shellecho));
+	currentsequentialhead->child.shellecho->value = temp;
+}
+
+void ast_make_keyvalpair(char *key, char *value){
+	struct keyvalpairs *temp = malloc(sizeof(struct keyvalpairs));
+	temp->key = malloc(sizeof(char)*(strlen(key)+1));
+	temp->value = malloc(sizeof(char)*(strlen(value)+1));
+	strcpy(temp->key, key);
+	strcpy(temp->value, value);
+	temp->next = currentkeyvalpairshead;
+	currentkeyvalpairshead = temp;
+
+	printf(":AST: Current keyvalpairs: ");
+	temp = currentkeyvalpairshead;
+	while(temp!=NULL){
+		printf("  {%s|%s}  ", temp->key, temp->value);
+		temp = temp->next;
+	}
+	printf("\n");
 }
 
 void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag){

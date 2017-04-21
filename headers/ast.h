@@ -35,6 +35,49 @@ union ast_nextconstruct_ptr{
 	struct ast_iterativenode *iterative;
 };
 
+union ast_sequential_code_ptr{
+	struct ast_sequential_shellecho *shellecho;
+	struct ast_sequential_functioncall *functioncall;
+	struct ast_sequential_genvardecl *genvardecl;
+	struct ast_sequential_mapvardecl *mapvardecl;
+	struct ast_sequential_return *_return;
+	struct ast_sequential_varassignment *assignments;
+};
+
+struct ast_sequential_shellecho{
+	char *value;
+};
+struct ast_sequential_functioncall{
+	char *functionname;
+	//ARGUMENTS
+};
+struct ast_sequential_genvardecl{
+	struct vardecl_assignmentlist *list;
+};
+struct vardecl_assignmentlist{
+	char *varname;
+	char *value;
+};
+struct ast_sequential_mapvardecl{
+	struct mapvarlist *mapvarlist;
+};
+struct mapvarlist{
+	char *mapname;
+	struct keyvalpairs *keyvalpairs;
+	struct mapvarlist *next;
+};
+struct keyvalpairs{
+	char *key;
+	char *value;
+	struct keyvalpairs *next;
+};
+struct ast_sequential_return{
+	char *returnval;
+};
+struct ast_sequential_varassignment{
+	struct vardecl_assignmentlist *assignments;
+};
+
 struct ast_construct{
 	enum ast_constructtype_t ctype;
 	union ast_nextconstruct_ptr ptr;
@@ -43,7 +86,7 @@ struct ast_construct{
 struct ast_sequentialnode{
 	char *name;
 	enum ast_selectiveconstructtype childtype;
-	void *child;
+	union ast_sequential_code_ptr child;
 	struct ast_construct next;
 };
 
@@ -72,4 +115,6 @@ void ast_add_iter(char *name);
 void ast_walk_constructs(struct ast_construct *head);
 void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag);
 void ast_advanceto_next_selective_construct(struct ast_construct *temp_construct, unsigned int *flag);
-void ast_advanceto_next_iterative_construct(struct ast_construct *temp_construct, unsigned int *flag	);
+void ast_advanceto_next_iterative_construct(struct ast_construct *temp_construct, unsigned int *flag);
+void ast_add_seq_shellecho(char *echo);
+void ast_make_keyvalpair(char *key, char *value);

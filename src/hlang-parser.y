@@ -42,9 +42,9 @@ enclosement:
 
 code:
 	%empty
-	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq("Lauda lehsan");}
-	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n"); ast_add_sel("jj");}
-	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n"); ast_add_iter("ii");}
+	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq("seq");}
+	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n"); ast_add_sel("sel");}
+	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n"); ast_add_iter("iter");	}
 	;
 
 
@@ -53,9 +53,9 @@ code:
 /* Different constructs */
 
 sequential_constuct:
-	mapvariables_declaration EOS			{printf("\t<SEQUENTIAL CONSTRUCT: MAP VARIABLE DECLARATIONS>\n");}
+	mapvariables_declaration EOS			{printf("\t<SEQUENTIAL CONSTRUCT: MAP VARIABLE DECLARATIONS>\n"); }
 	|generalvariables_declaration EOS		{printf("\t<SEQUENTIAL CONSTRUCT: GEN VARIABLE DECLARATIONS>\n");}
-	|SHELLECHO EOS					{printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n");}
+	|SHELLECHO EOS					{printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n"); ast_add_seq_shellecho($1);}
 	|functioncall EOS				{printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n");}
 	|assignments EOS				{printf("\t<SEQUENTIAL CONSTRUCT: VARIABLE ASSIGNMENT>\n");}
 	|return_statement EOS				{printf("\t<SEQUENTIAL CONSTRUCT: RETURN STATEMENT>\n");}
@@ -102,10 +102,10 @@ map_discrete_variable:
 	;
 
 keyvalpairs:
-	keytype IS datatype				{printf("\t<KEYVALPAIRS: FOUND DISCRETE>\n");}
-	|keyvalpairs COMMA keytype IS datatype		{printf("\t<KEYVALPAIRS: FOUND COMMA>\n");}
-	|datatype					{printf("\t<KEYVALPAIRS: FOUND JUST DATATYPE>\n");}
-	|keyvalpairs COMMA datatype			{printf("\t<KEYVALPAIRS: FOUND COMMA JUST DATATYPE>\n");}
+	keytype IS datatype				{printf("\t<KEYVALPAIRS: FOUND DISCRETE>\n"); ast_make_keyvalpair($1,$3);}
+	|keyvalpairs COMMA keytype IS datatype		{printf("\t<KEYVALPAIRS: FOUND COMMA>\n"); ast_make_keyvalpair($3,$5);}
+	|datatype					{printf("\t<KEYVALPAIRS: FOUND JUST DATATYPE>\n"); ast_make_keyvalpair($1, "0");}
+	|keyvalpairs COMMA datatype			{printf("\t<KEYVALPAIRS: FOUND COMMA JUST DATATYPE>\n"); ast_make_keyvalpair($3, "0");}
 	;
 
 keytype:
