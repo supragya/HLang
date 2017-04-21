@@ -1,0 +1,6 @@
+#!/script/HLang
+
+function foo{}
+function main{
+	declare $var;
+}
