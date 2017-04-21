@@ -36,7 +36,7 @@ union ast_nextconstruct_ptr{
 
 struct ast_construct{
 	enum ast_constructtype_t ctype;
-	union ast_nextconstruct_ptr data;
+	union ast_nextconstruct_ptr ptr;
 };
 
 struct ast_sequentialnode{

@@ -15,7 +15,7 @@ int ast_init(){
 		return 1;
 	rootnode->functions = NULL;
 	currentconstructhead->ctype = NONE;
-	currentconstructhead->data.selective = NULL;
+	currentconstructhead->ptr.selective = NULL;
 	printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	return 0;
 }
@@ -51,7 +51,7 @@ void* ast_add_seq(char *name){
 	printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	printf(":AST: newseqnode made with name %s\n", newseqnode->name);
 	if(currentconstructhead->ctype == NONE){
-		currentconstructhead->data.sequential = newseqnode;
+		currentconstructhead->ptr.sequential = newseqnode;
 		currentconstructhead->ctype = SEQUENTIAL;
 		printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	}
@@ -60,45 +60,45 @@ void* ast_add_seq(char *name){
 		struct ast_construct *tempptr = malloc(sizeof(struct ast_construct));
 		tempptr->ctype = currentconstructhead->ctype;
 		if(currentconstructhead->ctype == SEQUENTIAL)
-			tempptr->data.sequential = currentconstructhead->data.sequential;
+			tempptr->ptr.sequential = currentconstructhead->ptr.sequential;
 		if(currentconstructhead->ctype == SELECTIVE)
-			tempptr->data.selective = currentconstructhead->data.selective;
+			tempptr->ptr.selective = currentconstructhead->ptr.selective;
 		if(currentconstructhead->ctype == ITERATIVE)
-			tempptr->data.selective = currentconstructhead->data.selective;
+			tempptr->ptr.selective = currentconstructhead->ptr.selective;
 		printf("tempptr is ctype: %d\n", tempptr->ctype);
 		while(tempptr->ctype != NONE){
 			switch (tempptr->ctype) {
 				case SEQUENTIAL: printf("at1\n");
-						 tempptr->ctype = tempptr->data.sequential->next.ctype;
-						 printf("tempptr->data.sequential->next.ctype is %d\n",tempptr->data.sequential->next.ctype);
-						 switch(tempptr->data.sequential->next.ctype){
+						 tempptr->ctype = tempptr->ptr.sequential->next.ctype;
+						 printf("tempptr->ptr.sequential->next.ctype is %d\n",tempptr->ptr.sequential->next.ctype);
+						 switch(tempptr->ptr.sequential->next.ctype){
 							 case NONE:	break;
-							 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.sequential->next.data.sequential; break;
-							 case SELECTIVE: tempptr->data.selective = tempptr->data.sequential->next.data.selective; break;
-							 case ITERATIVE: tempptr->data.iterative = tempptr->data.sequential->next.data.iterative; break;
+							 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.sequential->next.ptr.sequential; break;
+							 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.sequential->next.ptr.selective; break;
+							 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.sequential->next.ptr.iterative; break;
 						 }
 						 break;
-				case SELECTIVE:  printf("at2\n");tempptr->ctype = tempptr->data.selective->next.ctype;
-						 switch(tempptr->data.selective->next.ctype){
+				case SELECTIVE:  printf("at2\n");tempptr->ctype = tempptr->ptr.selective->next.ctype;
+						 switch(tempptr->ptr.selective->next.ctype){
 							 case NONE:	break;
-							 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.selective->next.data.sequential; break;
-							 case SELECTIVE: tempptr->data.selective = tempptr->data.selective->next.data.selective; break;
-							 case ITERATIVE: tempptr->data.iterative = tempptr->data.selective->next.data.iterative; break;
+							 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.selective->next.ptr.sequential; break;
+							 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.selective->next.ptr.selective; break;
+							 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.selective->next.ptr.iterative; break;
 						 }
 						 break;
-				case ITERATIVE:  printf("at3\n");tempptr->ctype = tempptr->data.iterative->next.ctype;
-						 switch(tempptr->data.iterative->next.ctype){
+				case ITERATIVE:  printf("at3\n");tempptr->ctype = tempptr->ptr.iterative->next.ctype;
+						 switch(tempptr->ptr.iterative->next.ctype){
 							 case NONE:	break;
-							 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.iterative->next.data.sequential; break;
-							 case SELECTIVE: tempptr->data.selective = tempptr->data.iterative->next.data.selective; break;
-							 case ITERATIVE: tempptr->data.iterative = tempptr->data.iterative->next.data.iterative; break;
+							 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.iterative->next.ptr.sequential; break;
+							 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.iterative->next.ptr.selective; break;
+							 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.iterative->next.ptr.iterative; break;
 						 }
 						 break;
 			}
 		}
 		/* Now we have tempptr as the last element */
-		tempptr->data.sequential->next.ctype = SEQUENTIAL;
-		tempptr->data.sequential->next.data.sequential = newseqnode;
+		tempptr->ptr.sequential->next.ctype = SEQUENTIAL;
+		tempptr->ptr.sequential->next.ptr.sequential = newseqnode;
 	}
 	ast_walk_constructs();
 	return (void *)newseqnode;
@@ -108,38 +108,38 @@ void ast_walk_constructs(){
 	struct ast_construct *tempptr = malloc(sizeof(struct ast_construct));
 	tempptr->ctype = currentconstructhead->ctype;
 	if(currentconstructhead->ctype == SEQUENTIAL)
-		tempptr->data.sequential = currentconstructhead->data.sequential;
+		tempptr->ptr.sequential = currentconstructhead->ptr.sequential;
 	if(currentconstructhead->ctype == SELECTIVE)
-		tempptr->data.selective = currentconstructhead->data.selective;
+		tempptr->ptr.selective = currentconstructhead->ptr.selective;
 	if(currentconstructhead->ctype == ITERATIVE)
-		tempptr->data.selective = currentconstructhead->data.selective;
+		tempptr->ptr.selective = currentconstructhead->ptr.selective;
 	while(tempptr->ctype != NONE){
 		switch (tempptr->ctype) {
-			case SEQUENTIAL: printf("[AST-SEQ]{%s}  ", tempptr->data.sequential->name);
-					 tempptr->ctype = tempptr->data.sequential->next.ctype;
-					 switch(tempptr->data.sequential->next.ctype){
+			case SEQUENTIAL: printf("[AST-SEQ]{%s}  ", tempptr->ptr.sequential->name);
+					 tempptr->ctype = tempptr->ptr.sequential->next.ctype;
+					 switch(tempptr->ptr.sequential->next.ctype){
 						 case NONE:	break;
-						 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.sequential->next.data.sequential; break;
-						 case SELECTIVE: tempptr->data.selective = tempptr->data.sequential->next.data.selective; break;
-						 case ITERATIVE: tempptr->data.iterative = tempptr->data.sequential->next.data.iterative; break;
+						 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.sequential->next.ptr.sequential; break;
+						 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.sequential->next.ptr.selective; break;
+						 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.sequential->next.ptr.iterative; break;
 					 }
 					 break;
-			case SELECTIVE:  printf("[AST-SEL]{%s}  ", tempptr->data.selective->name);
-					 tempptr->ctype = tempptr->data.selective->next.ctype;
-					 switch(tempptr->data.selective->next.ctype){
+			case SELECTIVE:  printf("[AST-SEL]{%s}  ", tempptr->ptr.selective->name);
+					 tempptr->ctype = tempptr->ptr.selective->next.ctype;
+					 switch(tempptr->ptr.selective->next.ctype){
 						 case NONE:	break;
-						 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.selective->next.data.sequential; break;
-						 case SELECTIVE: tempptr->data.selective = tempptr->data.selective->next.data.selective; break;
-						 case ITERATIVE: tempptr->data.iterative = tempptr->data.selective->next.data.iterative; break;
+						 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.selective->next.ptr.sequential; break;
+						 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.selective->next.ptr.selective; break;
+						 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.selective->next.ptr.iterative; break;
 					 }
 					 break;
-			case ITERATIVE:  printf("[AST-ITR]{%s}  ", tempptr->data.iterative->name);
-					 tempptr->ctype = tempptr->data.iterative->next.ctype;
-					 switch(tempptr->data.iterative->next.ctype){
+			case ITERATIVE:  printf("[AST-ITR]{%s}  ", tempptr->ptr.iterative->name);
+					 tempptr->ctype = tempptr->ptr.iterative->next.ctype;
+					 switch(tempptr->ptr.iterative->next.ctype){
 						 case NONE:	break;
-						 case SEQUENTIAL: tempptr->data.sequential = tempptr->data.iterative->next.data.sequential; break;
-						 case SELECTIVE: tempptr->data.selective = tempptr->data.iterative->next.data.selective; break;
-						 case ITERATIVE: tempptr->data.iterative = tempptr->data.iterative->next.data.iterative; break;
+						 case SEQUENTIAL: tempptr->ptr.sequential = tempptr->ptr.iterative->next.ptr.sequential; break;
+						 case SELECTIVE: tempptr->ptr.selective = tempptr->ptr.iterative->next.ptr.selective; break;
+						 case ITERATIVE: tempptr->ptr.iterative = tempptr->ptr.iterative->next.ptr.iterative; break;
 					 }
 					 break;
 		}
