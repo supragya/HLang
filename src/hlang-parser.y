@@ -8,6 +8,7 @@
 #include "hlang-lexer.h"
 #include "hlang-parser.h"
 #include "variable_mgmt.h"
+#include "ast.h"
 
 %}
 %define api.value.type {char *}
@@ -32,16 +33,16 @@ script:
 	;
 
 function:
-	FUNC enclosement				{printf("\t<FUNCTION>\n"); vms_decommission_scope(0);}
+	FUNC enclosement				{printf("\t<FUNCTION>\n"); ast_add_function($1);}
 	;
 
 enclosement:
-	BROPEN code BRCLOSE				{printf("\t<ENCLOSEMENT>\n");	}
+	BROPEN code BRCLOSE				{printf("\t<ENCLOSEMENT>\n");}
 	;
 
 code:
 	%empty
-	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n");}
+	|code sequential_constuct			{printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq("Lauda lehsan");}
 	|code selective_constructs			{printf("\t<CODE: SELECTIVE CONSTRUCTS>\n");}
 	|code iterative_constructs			{printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n");}
 	;
@@ -96,7 +97,7 @@ map_variablelist:
 	;
 
 map_discrete_variable:
-	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND| %s>\n", $1); vms_add_new_map($1,0);}
+	VARNAME						{printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND| %s>\n", $1);}
 	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS>\n");}
 	;
 
@@ -130,16 +131,10 @@ gen_variablelist:
 	;
 
 gen_discrete_variable:
-	VARNAME						{printf("\t<GEN DISCRETE VARIABLE: VARNAME| New variable %s>\n", $1); vms_add_new_variable($1, 0);}
-	|VARNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION| New variable %s with value %s>\n", $1, $3);
-							variable_ptr_t current = vms_add_new_variable($1, 0);
-							vms_assign_to_bin_location(current, $3);
-							}
-	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME| New mapelement %s>\n", $1); vms_add_new_mapelement($1, 0);}
-	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION| New element %s with val %s>\n",$1, $3);
-							variable_ptr_t current = vms_add_new_mapelement($1, 0);
-							vms_assign_to_bin_location(current, $3);
-							}
+	VARNAME						{printf("\t<GEN DISCRETE VARIABLE: VARNAME| New variable %s>\n", $1);}
+	|VARNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION| New variable %s with value %s>\n", $1, $3);}
+	|MELNAME					{printf("\t<GEN DISCRETE VARIABLE: MELNAME| New mapelement %s>\n", $1);}
+	|MELNAME ASSIGN expression			{printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION| New element %s with val %s>\n",$1, $3);}
 	;
 
 
@@ -248,7 +243,6 @@ relopr:
 	|LE						{printf("\t<RELOPR: LE>\n");}
 	|GE						{printf("\t<RELOPR: GE>\n");}
 	;
-
 
 
 /* Functioncall set */
