@@ -57,6 +57,7 @@ struct ast_sequential_genvardecl{
 struct vardecl_assignmentlist{
 	char *varname;
 	char *value;
+	struct vardecl_assignmentlist *next;
 };
 struct ast_sequential_mapvardecl{
 	struct mapvarlist *mapvarlist;
@@ -118,3 +119,8 @@ void ast_advanceto_next_selective_construct(struct ast_construct *temp_construct
 void ast_advanceto_next_iterative_construct(struct ast_construct *temp_construct, unsigned int *flag);
 void ast_add_seq_shellecho(char *echo);
 void ast_make_keyvalpair(char *key, char *value);
+void ast_add_mapdeclnode(char *mapname);
+void ast_add_seq_mapdecl();
+void ast_add_seq_vardecl();
+void ast_make_vardecl_assignment(char *varname, char *value);
+void ast_make_vardecl_assignment_defaultval(char *varname);
