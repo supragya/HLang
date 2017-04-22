@@ -1,1 +1,1 @@
-./bin/HLang-interpreter
+./bin/HLang-interpreter $1

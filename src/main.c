@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "buildtime_hlang-parser.h"
 #include "buildtime_hlang-lexer.h"
 #include "hlang-lexer.h"
@@ -10,6 +11,7 @@
 #include "variable_mgmt.h"
 #include "scope_mgmt.h"
 #include "ast.h"
+#include "verbose.h"
 
 #define DATABUFLEN 2000
 
@@ -17,7 +19,7 @@
 void welcome();
 void complete();
 
-int main(char **argv){
+int main(int argc, char *argv[]){
 	/* Print welcome message on screen */
 	welcome();
 
@@ -33,6 +35,24 @@ int main(char **argv){
 		printf(">>>Error: Cannot initialise abstract syntax tree\n");
 		return 1;
 	}
+
+	if(argc >= 2){
+		/* Set verbose */
+		int len = strlen(argv[1]);
+		len--;
+		while(len>=0){
+			switch (argv[1][len]) {
+				case 'l': verbose_set_lexer(); break;
+				case 'p': verbose_set_parser(); break;
+				case 'a': verbose_set_ast(); break;
+			}
+			len--;
+		}
+	}
+	printf("\n");
+	verbose_status_display();
+
+	printf("\nAll verbose outputs are as follows:\n[lexer output]\n\t<PARSER OUTPUT>\n:AST: AST output\n");
 	/* Begin testing ast */
 	/* Allocate yylval legit space */
 	yylval = malloc(sizeof(char)*DATABUFLEN);
@@ -63,7 +83,7 @@ void welcome(){
 	printf("+--------------------------------------------+\n");
 	printf("|      HLang Interpreter - %s   |\n", version_name[VERSION]);
 	printf("+-%s------------------------------------%s-+\n", WIP?"wip":"---", DRAFT );
-	printf("\nAll verbose outputs are as follows:\n[lexer output]\n\t<PARSER OUTPUT>\n:AST: AST output\n");
+	//verbose_set_lexer();
 }
 
 void complete(){

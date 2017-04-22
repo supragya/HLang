@@ -2,10 +2,12 @@
 
 function foo{}
 function main{
-	declare $var;
-	declare $na;
-	if("a"=="b"){}
-	while($shit == 10){}
+	declare $na, $nn = 60, $bb[20], $nanari = $ctr+620-20;
+	#if("a"=="b"){}
+	#while($shit == 10){}
+	declare map $torvalds = {"run" is 10, "brace" is 90, "grow" is 80, "shutter", 9}, $total = {"totaldat", 999};
+	<% test shellecho >;
+	#declare $var;
 }
 function main2{
 }
