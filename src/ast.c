@@ -9,6 +9,8 @@ struct ast_root_node *rootnode;
 struct ast_construct *currentconstructhead;
 struct ast_sequentialnode *currentsequentialhead;
 struct keyvalpairs *currentkeyvalpairshead;
+struct mapvarlist *currentmapvarlisthead;
+struct vardecl_assignmentlist *currentvardeclassignmentlisthead;
 
 int ast_init(){
 	rootnode = malloc(sizeof(struct ast_root_node));
@@ -20,7 +22,8 @@ int ast_init(){
 	currentconstructhead->ptr.selective = NULL;
 	currentsequentialhead = NULL;
 	currentkeyvalpairshead = NULL;
-	printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+	currentmapvarlisthead = NULL;
+	currentvardeclassignmentlisthead = NULL;
 	return 0;
 }
 
@@ -53,12 +56,13 @@ void ast_add_function(char *functionname){
 	// printf("camehere\n");
 	// printf(":AST CONSTRUCTS:::   ");
 	ast_walk_constructs(temp_construct);
+	printf(":AST: Current functions in AST: ");
 	while(temp_function != NULL){
-		printf("{%s}", temp_function->functionname);
+		printf("  {%s}  ", temp_function->functionname);
 		temp_function = temp_function->next;
 	}
 	free(temp_construct);
-	printf("\n---------------------------------\n");
+	printf("\n");
 }
 
 void ast_add_seq(char *name){
@@ -67,26 +71,25 @@ void ast_add_seq(char *name){
 	newseqnode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newseqnode->name, name);
 	newseqnode->next.ctype = NONE;
-	// if(currentsequentialhead != NULL){
-	// 	newseqnode->childtype = currentsequentialhead->childtype;
-	// 	switch(newseqnode->childtype){
-	// 		case AST_GENVARDECL: newseqnode->child.genvardecl = currentsequentialhead->child.genvardecl; break;
-	// 		case AST_MAPVARDECL: newseqnode->child.mapvardecl = currentsequentialhead->child.mapvardecl; break;
-	// 		case AST_ASSIGNMENTS: newseqnode->child.assignments = currentsequentialhead->child.assignments; break;
-	// 		case AST_RETURN: newseqnode->child._return = currentsequentialhead->child._return; break;
-	// 		case AST_SHELLECHO: newseqnode->child.shellecho = currentsequentialhead->child.shellecho; break;
-	// 		case AST_FUNCTIONCALL: newseqnode->child.functioncall = currentsequentialhead->child.functioncall; break;
-	// 	}
-	// 	//NOTE: free(currentsequentialhead); gives traversal error
-	// 	currentsequentialhead = NULL;
-	// 	// printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
-	// 	// printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
-	// }
+	if(currentsequentialhead != NULL){
+		newseqnode->childtype = currentsequentialhead->childtype;
+		switch(newseqnode->childtype){
+			case AST_GENVARDECL: newseqnode->name[0] = 'g'; printf(":AST: Registering sequential construct SEQ----GENVARDECL\n");newseqnode->child.genvardecl = currentsequentialhead->child.genvardecl; break;
+			case AST_MAPVARDECL: newseqnode->name[0] = 'm'; printf(":AST: Registering sequential construct SEQ----MAPVARDECL\n");newseqnode->child.mapvardecl = currentsequentialhead->child.mapvardecl; break;
+			case AST_ASSIGNMENTS: newseqnode->name[0] = 'a'; printf(":AST: Registering sequential construct SEQ----ASSIGNMENTS\n");newseqnode->child.assignments = currentsequentialhead->child.assignments; break;
+			case AST_RETURN: newseqnode->name[0] = 'r'; printf(":AST: Registering sequential construct SEQ----RETURN\n");newseqnode->child._return = currentsequentialhead->child._return; break;
+			case AST_SHELLECHO: newseqnode->name[0] = 's'; printf(":AST: Registering sequential construct SEQ----SHELLECHO\n");newseqnode->child.shellecho = currentsequentialhead->child.shellecho; break;
+			case AST_FUNCTIONCALL: newseqnode->name[0] = 'f'; printf(":AST: Registering sequential construct SEQ----FUNCTIONCALL\n");newseqnode->child.functioncall = currentsequentialhead->child.functioncall; break;
+		}
+		free(currentsequentialhead);
+		currentsequentialhead = NULL;
+		// printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+		// printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
+	}
 	printf(":AST: newseqnode with name %s\n", newseqnode->name);
 	if(currentconstructhead->ctype == NONE){
 		currentconstructhead->ptr.sequential = newseqnode;
 		currentconstructhead->ctype = SEQUENTIAL;
-		printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	}
 	else{
 		// printf("[AST]currentconstructhead was FULL\n");
@@ -242,7 +245,7 @@ void ast_add_iter(char *name){
 }
 
 void ast_walk_constructs(struct ast_construct *head){
-	printf(">>>>>>>>>>>>> :AST: CONSTRUCT WALK::::  ");
+	printf(":AST: Construct walk::::  ");
 	struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
 	temp_construct->ctype = head->ctype;
 	if(head->ctype == SEQUENTIAL)
@@ -275,6 +278,7 @@ void ast_add_seq_shellecho(char *echo){
 	strcpy(temp,echo);
 	currentsequentialhead->child.shellecho = malloc(sizeof(struct ast_sequential_shellecho));
 	currentsequentialhead->child.shellecho->value = temp;
+	printf(":AST: Added shellecho: %s\n", currentsequentialhead->child.shellecho->value);
 }
 
 void ast_make_keyvalpair(char *key, char *value){
@@ -285,6 +289,7 @@ void ast_make_keyvalpair(char *key, char *value){
 	strcpy(temp->value, value);
 	temp->next = currentkeyvalpairshead;
 	currentkeyvalpairshead = temp;
+	printf(":AST: Made keyvaluepair: {%s|%s}\n", temp->key, temp->value);
 
 	printf(":AST: Current keyvalpairs: ");
 	temp = currentkeyvalpairshead;
@@ -293,6 +298,61 @@ void ast_make_keyvalpair(char *key, char *value){
 		temp = temp->next;
 	}
 	printf("\n");
+}
+
+void ast_add_mapdeclnode(char *mapname){
+	struct mapvarlist *newmapvar = malloc(sizeof(struct mapvarlist));
+	newmapvar->mapname = malloc(sizeof(char)*(strlen(mapname)+1));
+	newmapvar->keyvalpairs = currentkeyvalpairshead;
+	currentkeyvalpairshead = NULL;
+	newmapvar->next = currentmapvarlisthead;
+	currentmapvarlisthead = newmapvar;
+	printf(":AST: Registered mapdeclaration node with data: ");
+	struct keyvalpairs *temp = newmapvar->keyvalpairs;
+	while(temp!=NULL){
+		printf("  {%s|%s}  ", temp->key, temp->value);
+		temp = temp->next;
+	}
+	printf("\n");
+}
+
+void ast_add_seq_mapdecl(){
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_MAPVARDECL;
+	currentsequentialhead->child.mapvardecl = malloc(sizeof(struct ast_sequential_mapvardecl));
+	currentsequentialhead->child.mapvardecl->mapvarlist = currentmapvarlisthead;
+	currentmapvarlisthead = NULL;
+}
+
+void ast_add_seq_vardecl(){
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_GENVARDECL;
+	currentsequentialhead->child.genvardecl = malloc(sizeof(struct ast_sequential_genvardecl));
+	currentsequentialhead->child.genvardecl->list = currentvardeclassignmentlisthead;
+	currentvardeclassignmentlisthead = NULL;
+}
+
+void ast_make_vardecl_assignment(char *varname, char *value){
+	struct vardecl_assignmentlist *tempvardeclassignmentlist = malloc(sizeof(struct vardecl_assignmentlist));
+	tempvardeclassignmentlist->varname = malloc(sizeof(char)*(strlen(varname)+1));
+	tempvardeclassignmentlist->value = malloc(sizeof(char)*(strlen(value)+1));
+	strcpy(tempvardeclassignmentlist->varname, varname);
+	strcpy(tempvardeclassignmentlist->value, value);
+	tempvardeclassignmentlist->next = currentvardeclassignmentlisthead;
+	currentvardeclassignmentlisthead = tempvardeclassignmentlist;
+	printf(":AST: Made vardecl assignment :{%s|%s}\n", tempvardeclassignmentlist->varname, tempvardeclassignmentlist->value);
+
+	printf(":AST: Current vardecl list state: ");
+	tempvardeclassignmentlist = currentvardeclassignmentlisthead;
+	while(tempvardeclassignmentlist!=NULL){
+		printf("  {%s|%s}  ", tempvardeclassignmentlist->varname, tempvardeclassignmentlist->value);
+		tempvardeclassignmentlist = tempvardeclassignmentlist->next;
+	}
+	printf("\n");
+}
+
+void ast_make_vardecl_assignment_defaultval(char *varname){
+	ast_make_vardecl_assignment(varname, "0");
 }
 
 void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag){
