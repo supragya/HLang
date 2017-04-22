@@ -63,7 +63,7 @@ void welcome(){
 	printf("+--------------------------------------------+\n");
 	printf("|      HLang Interpreter - %s   |\n", version_name[VERSION]);
 	printf("+-%s------------------------------------%s-+\n", WIP?"wip":"---", DRAFT );
-	printf("\nAll verbose outputs are as follows:\n[lexer output]\n\t<PARSER OUTPUT>\n");
+	printf("\nAll verbose outputs are as follows:\n[lexer output]\n\t<PARSER OUTPUT>\n:AST: AST output\n");
 }
 
 void complete(){
