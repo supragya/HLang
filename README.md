@@ -11,7 +11,7 @@ Building HLang from source
 ----------------
 The HLang interpreter is at present a set of lexer and analyser system. A bit of AST buildup is done, but it is far from ideal. To build HLang from source, download the code from the repository to a local machine using:
 
-   git clone https://github.com/supragya/HLang.git HLang
+    git clone https://github.com/supragya/HLang.git HLang
 
 You may change "HLang" at the end of command to whatever directory you want the codebase to be stored at. Then `cd` to the codebase (folder HLang here) and use the following commands:
 
