@@ -36,6 +36,9 @@ Verbose options are options that you provide while executing the interpreter sta
     a :  Abstract Syntax tree
     l :  Lexer
     p :  Parser
+    v :  Variable Management subsystem
+    e :  Executor
+    s :  Scope Management subsystem
 
 For example if you want to run the interpreter with verbose output on screen from Abstract Syntax Tree, you may use: `./run a`. If you want to run the interpreter with verbose output from parser, you may use `./run p`. In case, verbose output from multiple modules is required, they can be stacked for that, in the following manner:
 
