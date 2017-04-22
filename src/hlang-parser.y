@@ -57,9 +57,9 @@ sequential_constuct:
 	mapvariables_declaration EOS			{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: MAP VARIABLE DECLARATIONS>\n"); ast_add_seq_mapdecl();}
 	|generalvariables_declaration EOS		{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: GEN VARIABLE DECLARATIONS>\n"); ast_add_seq_vardecl();}
 	|SHELLECHO EOS					{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n"); ast_add_seq_shellecho($1);}
-	|functioncall EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n");}
+	|functioncall EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n"); ast_add_seq_functioncall($1);}
 	|assignments EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: VARIABLE ASSIGNMENT>\n");}
-	|return_statement EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: RETURN STATEMENT>\n");}
+	|return_statement EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: RETURN STATEMENT>\n"); ast_add_seq_return();}
 	;
 
 selective_constructs:
@@ -248,7 +248,7 @@ relopr:
 
 /* Functioncall set */
 functioncall:
-	GSTRING PARANOPEN funccallargs PARANCLOSE	{if(PARSERVERBOSE())printf("\t<FUNCTION CALL>\n");}
+	GSTRING PARANOPEN funccallargs PARANCLOSE	{if(PARSERVERBOSE())printf("\t<FUNCTION CALL>\n"); $$=$1;}
 
 funccallargs:
 	%empty						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: NONE>\n");}
@@ -257,18 +257,18 @@ funccallargs:
 	;
 
 discrete_argument:
-	NSTRING						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : NSTRING>\n");}
-	|STRING						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : STRING>\n");}
-	|VARNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : VARNAME>\n");}
-	|ARGVAR						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : ARGVAR>\n");}
-	|MELNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : MELNAME>\n");}
+	NSTRING						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : NSTRING>\n"); ast_add_arguments_string($1);}
+	|STRING						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : STRING>\n"); ast_add_arguments_string($1);}
+	|VARNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : VARNAME>\n"); ast_add_arguments_varname($1);}
+	|ARGVAR						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : ARGVAR>\n"); ast_add_arguments_varname($1);}
+	|MELNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : MELNAME>\n"); ast_add_arguments_varname($1);}
 	|functioncall					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : FUNCTIONCALL>\n");}
 	;
 
 /* Return statement */
 return_statement:
 	RETURN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<RETURN KEYVALPAIRS>\n");}
-	|RETURN expression			{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n");}
+	|RETURN expression			{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n"); ast_set_return_val_varname("dota");}
 	;
 
 

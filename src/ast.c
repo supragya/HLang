@@ -13,6 +13,8 @@ struct ast_sequentialnode *currentsequentialhead;
 struct keyvalpairs *currentkeyvalpairshead;
 struct mapvarlist *currentmapvarlisthead;
 struct vardecl_assignmentlist *currentvardeclassignmentlisthead;
+struct functioncallargs *currentfunccallargshead;
+struct returnval *currentreturnvalhead;
 
 int ast_init(){
 	rootnode = malloc(sizeof(struct ast_root_node));
@@ -26,6 +28,8 @@ int ast_init(){
 	currentkeyvalpairshead = NULL;
 	currentmapvarlisthead = NULL;
 	currentvardeclassignmentlisthead = NULL;
+	currentfunccallargshead = NULL;
+	currentreturnvalhead = NULL;
 	return 0;
 }
 
@@ -355,6 +359,96 @@ void ast_make_vardecl_assignment(char *varname, char *value){
 
 void ast_make_vardecl_assignment_defaultval(char *varname){
 	ast_make_vardecl_assignment(varname, "0");
+}
+
+void ast_add_arguments_string(char *argstr){
+	struct functioncallargs *temparg = malloc(sizeof(struct functioncallargs));
+	temparg->argtype = F_STRING;
+	temparg->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
+	temparg->next = NULL;
+	strcpy(temparg->argument_str, argstr);
+
+	if(currentfunccallargshead == NULL)
+		currentfunccallargshead = temparg;
+	else{
+		struct functioncallargs *traverser = currentfunccallargshead;
+		while(traverser->next != NULL)
+			traverser = traverser->next;
+		traverser->next = temparg;
+	}
+
+	if(ASTVERBOSE())printf(":AST: Added functioncall argument {stringtype|%s}\n", temparg->argument_str);
+	if(ASTVERBOSE())printf(":AST: Current argument list: ");
+	temparg = currentfunccallargshead;
+	while(temparg != NULL){
+		if(temparg->argtype == F_STRING){
+			if(ASTVERBOSE())printf("  {stringtype|%s}  ", temparg->argument_str);
+		}
+		else if(temparg->argtype == F_VARNAME){
+			if(ASTVERBOSE())printf("  {VARNAME|%s}  ", temparg->argument_str);
+		}
+		temparg = temparg->next;
+	}
+	if(ASTVERBOSE())printf("\n");
+}
+
+void ast_add_arguments_varname(char *argstr){
+	struct functioncallargs *temparg = malloc(sizeof(struct functioncallargs));
+	temparg->argtype = F_VARNAME;
+	temparg->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
+	temparg->next = NULL;
+	strcpy(temparg->argument_str, argstr);
+
+	if(currentfunccallargshead == NULL)
+		currentfunccallargshead = temparg;
+	else{
+		struct functioncallargs *traverser = currentfunccallargshead;
+		while(traverser->next != NULL)
+			traverser = traverser->next;
+		traverser->next = temparg;
+	}
+
+	printf(":AST: Added functioncall argument {vartype|%s}\n", temparg->argument_str);
+	if(ASTVERBOSE())printf(":AST: Current argument list: ");
+	temparg = currentfunccallargshead;
+	while(temparg != NULL){
+		if(temparg->argtype == F_STRING){
+			if(ASTVERBOSE())printf("  {stringtype|%s}  ", temparg->argument_str);
+		}
+		else if(temparg->argtype == F_VARNAME){
+			if(ASTVERBOSE())printf("  {VARNAME|%s}  ", temparg->argument_str);
+		}
+		temparg = temparg->next;
+	}
+	if(ASTVERBOSE())printf("\n");
+}
+
+void ast_add_seq_functioncall(char *functionname){
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_FUNCTIONCALL;
+	currentsequentialhead->child.functioncall = malloc(sizeof(struct ast_sequential_functioncall));
+	currentsequentialhead->child.functioncall->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
+	strcpy(currentsequentialhead->child.functioncall->functionname, functionname);
+	currentsequentialhead->child.functioncall->args = currentfunccallargshead;
+	currentfunccallargshead = NULL;
+	if(ASTVERBOSE())printf(":AST: Found a functioncall to {%s}\n", currentsequentialhead->child.functioncall->functionname);
+}
+
+void ast_set_return_val_varname(char *varname){
+	//TODO
+	currentreturnvalhead = malloc(sizeof(struct returnval));
+	currentreturnvalhead->type = R_VARNAME;
+	currentreturnvalhead->ret_str = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(currentreturnvalhead->ret_str, varname);
+	if(ASTVERBOSE())printf(":AST: Set the return value to varname %s\n", varname);
+}
+
+void ast_add_seq_return(){
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_RETURN;
+	currentsequentialhead->child._return = malloc(sizeof(struct ast_sequential_return));
+	currentsequentialhead->child._return->retdata = currentreturnvalhead;
+	currentreturnvalhead = NULL;
 }
 
 void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag){

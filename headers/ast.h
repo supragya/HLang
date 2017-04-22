@@ -29,6 +29,17 @@ enum ast_iterativeconstructtype{
 	AST_WHILELOOP
 };
 
+enum functioncallargtype{
+	F_STRING,
+	F_VARNAME
+};
+
+enum returntype{
+	R_STRING,
+	R_VARNAME,
+	R_FUNCTIONCALL
+};
+
 union ast_nextconstruct_ptr{
 	struct ast_sequentialnode *sequential;
 	struct ast_selectivenode *selective;
@@ -49,7 +60,13 @@ struct ast_sequential_shellecho{
 };
 struct ast_sequential_functioncall{
 	char *functionname;
-	//ARGUMENTS
+	struct functioncallargs *args;
+};
+struct functioncallargs{
+	enum functioncallargtype argtype;
+	char *argument_str;
+	struct ast_sequential_functioncall *fcall;
+	struct functioncallargs *next;
 };
 struct ast_sequential_genvardecl{
 	struct vardecl_assignmentlist *list;
@@ -73,11 +90,17 @@ struct keyvalpairs{
 	struct keyvalpairs *next;
 };
 struct ast_sequential_return{
-	char *returnval;
+	struct returnval *retdata;
+};
+struct returnval{
+	enum returntype type;
+	char *ret_str;
 };
 struct ast_sequential_varassignment{
-	struct vardecl_assignmentlist *assignments;
+	struct var_assignments *assignments;
 };
+
+
 
 struct ast_construct{
 	enum ast_constructtype_t ctype;
@@ -124,3 +147,8 @@ void ast_add_seq_mapdecl();
 void ast_add_seq_vardecl();
 void ast_make_vardecl_assignment(char *varname, char *value);
 void ast_make_vardecl_assignment_defaultval(char *varname);
+void ast_add_arguments_string(char *argstr);
+void ast_add_arguments_varname(char *argstr);
+void ast_add_seq_functioncall(char *functionname);
+void ast_set_return_val_varname(char *varname);
+void ast_add_seq_return();
