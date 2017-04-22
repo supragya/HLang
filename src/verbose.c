@@ -13,14 +13,13 @@ int ASTVERBOSE(){
 	return verbosedata[2];
 }
 
-void verbose_set_lexer(){
-	verbosedata[0] = 1;
-}
-void verbose_set_parser(){
-	verbosedata[1] = 1;
-}
-void verbose_set_ast(){
-	verbosedata[2] = 1;
+
+void verbose_set_verbose(char ch){
+	switch(ch){
+		case 'l': verbosedata[0]=1;break;
+		case 'p': verbosedata[1]=1;break;
+		case 'a': verbosedata[2]=1;break;
+	}
 }
 
 void verbose_status_display(){

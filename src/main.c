@@ -40,14 +40,8 @@ int main(int argc, char *argv[]){
 		/* Set verbose */
 		int len = strlen(argv[1]);
 		len--;
-		while(len>=0){
-			switch (argv[1][len]) {
-				case 'l': verbose_set_lexer(); break;
-				case 'p': verbose_set_parser(); break;
-				case 'a': verbose_set_ast(); break;
-			}
-			len--;
-		}
+		while(len>=0)
+			verbose_set_verbose(argv[1][len--]);
 	}
 	printf("\n");
 	verbose_status_display();
@@ -68,11 +62,13 @@ int main(int argc, char *argv[]){
 	/* Iterate through all the tests */
 	unsigned int i = 0;
 	while(strcmp(testset[i],"")){
-		printf("\n>>>PARSING FILE \"%s\"===============================================\n", testset[i]);
+		printf("\nMAIN>>>  =====PARSING FILE \"%s\"=====\n", testset[i]);
 		if(set_read_file(testset[i]))
 			return 1; //Cannot find file
-		else
+		else{
 			yyparse();
+			printf("\nMAIN>>>  =====ANALYSIS AND AST SYNTHESIS DONE FOR \"%s\"=====\n", testset[i]);
+		}
 		i++;
 	}
 
