@@ -7,7 +7,6 @@
 #include "ast.h"
 #include "verbose.h"
 
-struct ast_root_node *rootnode;
 struct ast_construct *currentconstructhead;
 struct ast_sequentialnode *currentsequentialhead;
 struct keyvalpairs *currentkeyvalpairshead;
@@ -18,12 +17,10 @@ struct returnval *currentreturnvalhead;
 
 int ast_init(){
 	rootnode = malloc(sizeof(struct ast_root_node));
-	currentconstructhead = malloc(sizeof(struct ast_construct));
+	currentconstructhead = NULL;
 	if(!rootnode)
 		return 1;
 	rootnode->functions = NULL;
-	currentconstructhead->ctype = NONE;
-	currentconstructhead->ptr.selective = NULL;
 	currentsequentialhead = NULL;
 	currentkeyvalpairshead = NULL;
 	currentmapvarlisthead = NULL;
@@ -36,38 +33,22 @@ int ast_init(){
 void ast_add_function(char *functionname){
 	if(ASTVERBOSE())printf(":AST: Adding functionname: %s\n", functionname);
 	struct ast_function_node *temp_function = malloc(sizeof(struct ast_function_node));
-	struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
 
-	temp_function->executionlist = malloc(sizeof(struct ast_construct));
-	if(!temp_function || !temp_function->executionlist)
-		if(ASTVERBOSE())printf(":AST: [Error] Cannot allocate memory for function node (%s)\n", functionname);
+	temp_function->executionlist = currentconstructhead;
+	currentconstructhead = NULL;
+
 	temp_function->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
-
 	strcpy(temp_function->functionname, functionname);
 	temp_function->next = rootnode->functions;
 	rootnode->functions = temp_function;
 
-	// if(ASTVERBOSE())printf("dbg1\n");
-	temp_function->executionlist->ctype = currentconstructhead->ctype;
-	temp_function->executionlist->ptr = currentconstructhead->ptr;
-	// if(ASTVERBOSE())printf("dbg2\n" );
-	// if(ASTVERBOSE())printf("current execlist starts at %d\n", temp_function->executionlist->ctype);
-
-	currentconstructhead->ctype = NONE;
-	currentconstructhead->ptr.selective = NULL;
-	// if(ASTVERBOSE())printf("dbg3\n");
-	// if(ASTVERBOSE())printf("camehere1");
-	temp_construct->ctype = temp_function->executionlist->ctype;
-	temp_construct->ptr = temp_function->executionlist->ptr;
-	// if(ASTVERBOSE())printf("camehere\n");
-	// if(ASTVERBOSE())printf(":AST CONSTRUCTS:::   ");
-	ast_walk_constructs(temp_construct);
+	if(ASTVERBOSE() && temp_function->executionlist == NULL)printf(":AST: This function is empty\n");
+	ast_walk_constructs(temp_function->executionlist);
 	if(ASTVERBOSE())printf(":AST: Current functions in AST: ");
 	while(temp_function != NULL){
 		if(ASTVERBOSE())printf("  {%s}  ", temp_function->functionname);
 		temp_function = temp_function->next;
 	}
-	free(temp_construct);
 	if(ASTVERBOSE())printf("\n");
 }
 
@@ -76,7 +57,7 @@ void ast_add_seq(char *name){
 	newseqnode = malloc(sizeof(struct ast_sequentialnode));
 	newseqnode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newseqnode->name, name);
-	newseqnode->next.ctype = NONE;
+	//newseqnode->next.ctype = NONE;
 	if(currentsequentialhead != NULL){
 		newseqnode->childtype = currentsequentialhead->childtype;
 		switch(newseqnode->childtype){
@@ -93,47 +74,23 @@ void ast_add_seq(char *name){
 		// if(ASTVERBOSE())printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
 	}
 	if(ASTVERBOSE())printf(":AST: newseqnode with name %s\n", newseqnode->name);
-	if(currentconstructhead->ctype == NONE){
+	if(currentconstructhead == NULL){
+		if(ASTVERBOSE())printf(":AST: currentconstructhead is empty at this point, allocating memory\n");
+		currentconstructhead = malloc(sizeof(struct ast_construct));
 		currentconstructhead->ptr.sequential = newseqnode;
 		currentconstructhead->ctype = SEQUENTIAL;
+		currentconstructhead->next = NULL;
 	}
 	else{
 		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
-		temp_construct->ctype = currentconstructhead->ctype;
-		if(currentconstructhead->ctype == SEQUENTIAL)
-			temp_construct->ptr.sequential = currentconstructhead->ptr.sequential;
-		if(currentconstructhead->ctype == SELECTIVE)
-			temp_construct->ptr.selective = currentconstructhead->ptr.selective;
-		if(currentconstructhead->ctype == ITERATIVE)
-			temp_construct->ptr.iterative = currentconstructhead->ptr.iterative;
-		// if(ASTVERBOSE())printf("temp_construct is ctype: %d\n", temp_construct->ctype);
-		unsigned int flag = 1;
-		while(flag){
-			switch (temp_construct->ctype) {
-				case SEQUENTIAL: //if(ASTVERBOSE())printf("at1\n");
-						 ast_advanceto_next_sequential_construct(temp_construct, &flag);
-						 break;
-				case SELECTIVE:  //if(ASTVERBOSE())printf("at2\n");
-						 ast_advanceto_next_selective_construct(temp_construct, &flag);
-						 break;
-				case ITERATIVE:  //if(ASTVERBOSE())printf("at3\n");
-						 ast_advanceto_next_iterative_construct(temp_construct, &flag);
-						 break;
-			}
+		struct ast_construct *temp_construct = currentconstructhead;
+		while(temp_construct->next != NULL){
+			temp_construct = temp_construct->next;
 		}
-		/* Now we have temp_construct as the last element */
-		switch(temp_construct->ctype){
-			case SEQUENTIAL:temp_construct->ptr.sequential->next.ctype = SEQUENTIAL;
-					temp_construct->ptr.sequential->next.ptr.sequential = newseqnode;
-					break;
-			case SELECTIVE:temp_construct->ptr.selective->next.ctype = SEQUENTIAL;
-					temp_construct->ptr.selective->next.ptr.sequential = newseqnode;
-					break;
-			case ITERATIVE:temp_construct->ptr.iterative->next.ctype = SEQUENTIAL;
-					temp_construct->ptr.iterative->next.ptr.sequential = newseqnode;
-					break;
-		}
+		temp_construct->next = malloc(sizeof(struct ast_construct));
+		temp_construct = temp_construct->next;
+		temp_construct->ctype = SEQUENTIAL;
+		temp_construct->ptr.sequential= newseqnode;
 	}
 	ast_walk_constructs(currentconstructhead);
 }
@@ -143,53 +100,25 @@ void ast_add_sel(char *name){
 	newselnode = malloc(sizeof(struct ast_selectivenode));
 	newselnode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newselnode->name, name);
-	newselnode->next.ctype = NONE;
+	// newselnode->next.ctype = NONE;
 	// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	if(ASTVERBOSE())printf(":AST: newselnode made with name %s\n", newselnode->name);
-	if(currentconstructhead->ctype == NONE){
+	if(currentconstructhead == NULL){
+		currentconstructhead = malloc(sizeof(struct ast_construct));
 		currentconstructhead->ptr.selective = newselnode;
-		currentconstructhead->ctype = SELECTIVE	;
-		// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+		currentconstructhead->ctype = SELECTIVE;
+		currentconstructhead->next = NULL;
 	}
 	else{
 		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
-		temp_construct->ctype = currentconstructhead->ctype;
-		if(currentconstructhead->ctype == SEQUENTIAL)
-			temp_construct->ptr.sequential = currentconstructhead->ptr.sequential;
-		if(currentconstructhead->ctype == SELECTIVE)
-			temp_construct->ptr.selective = currentconstructhead->ptr.selective;
-		if(currentconstructhead->ctype == ITERATIVE)
-			temp_construct->ptr.iterative = currentconstructhead->ptr.iterative;
-		// if(ASTVERBOSE())printf("temp_construct is ctype: %d\n", temp_construct->ctype);
-		unsigned int flag = 1;
-		while(flag){
-			switch (temp_construct->ctype) {
-				case SEQUENTIAL: //if(ASTVERBOSE())printf("at1\n");
-						 ast_advanceto_next_sequential_construct(temp_construct, &flag);
-						 break;
-				case SELECTIVE:  //if(ASTVERBOSE())printf("at2\n");
-						 ast_advanceto_next_selective_construct(temp_construct, &flag);
-						 break;
-				case ITERATIVE:  //if(ASTVERBOSE())printf("at3\n");
-						 ast_advanceto_next_iterative_construct(temp_construct, &flag);
-						 break;
-			}
-			//if(ASTVERBOSE())printf("here temp_construct->ctype is %d\n", temp_construct->ctype);
+		struct ast_construct *temp_construct = currentconstructhead;
+		while(temp_construct->next != NULL){
+			temp_construct = temp_construct->next;
 		}
-		//if(ASTVERBOSE())printf("we are out \n");
-		/* Now we have temp_construct as the last element */
-		switch(temp_construct->ctype){
-			case SEQUENTIAL:temp_construct->ptr.sequential->next.ctype = SELECTIVE;
-					temp_construct->ptr.sequential->next.ptr.selective = newselnode;
-					break;
-			case SELECTIVE:temp_construct->ptr.selective->next.ctype = SELECTIVE;
-					temp_construct->ptr.selective->next.ptr.selective = newselnode;
-					break;
-			case ITERATIVE:temp_construct->ptr.iterative->next.ctype = SELECTIVE;
-					temp_construct->ptr.iterative->next.ptr.selective = newselnode;
-					break;
-		}
+		temp_construct->next = malloc(sizeof(struct ast_construct));
+		temp_construct = temp_construct->next;
+		temp_construct->ctype = SELECTIVE;
+		temp_construct->ptr.selective = newselnode;
 	}
 	ast_walk_constructs(currentconstructhead);
 }
@@ -199,80 +128,39 @@ void ast_add_iter(char *name){
 	newiternode = malloc(sizeof(struct ast_iterativenode));
 	newiternode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newiternode->name, name);
-	newiternode->next.ctype = NONE;
+	//newiternode->next.ctype = NONE;
 	// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 	if(ASTVERBOSE())printf(":AST: newiternode made with name %s\n", newiternode->name);
-	if(currentconstructhead->ctype == NONE){
+	if(currentconstructhead == NULL){
+		currentconstructhead = malloc(sizeof(struct ast_construct));
 		currentconstructhead->ptr.iterative = newiternode;
-		currentconstructhead->ctype = ITERATIVE	;
-		// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+		currentconstructhead->ctype = ITERATIVE;
+		currentconstructhead->next = NULL;
 	}
 	else{
 		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
-		temp_construct->ctype = currentconstructhead->ctype;
-		if(currentconstructhead->ctype == SEQUENTIAL)
-			temp_construct->ptr.sequential = currentconstructhead->ptr.sequential;
-		if(currentconstructhead->ctype == SELECTIVE)
-			temp_construct->ptr.selective = currentconstructhead->ptr.selective;
-		if(currentconstructhead->ctype == ITERATIVE)
-			temp_construct->ptr.iterative = currentconstructhead->ptr.iterative;
-		// if(ASTVERBOSE())printf("temp_construct is ctype: %d\n", temp_construct->ctype);
-		unsigned int flag = 1;
-		while(flag){
-			switch (temp_construct->ctype) {
-				case SEQUENTIAL: //if(ASTVERBOSE())printf("at1\n");
-						 ast_advanceto_next_sequential_construct(temp_construct, &flag);
-						 break;
-				case SELECTIVE:  //if(ASTVERBOSE())printf("at2\n");
-						 ast_advanceto_next_selective_construct(temp_construct, &flag);
-						 break;
-				case ITERATIVE:  //if(ASTVERBOSE())printf("at3\n");
-						 ast_advanceto_next_iterative_construct(temp_construct, &flag);
-						 break;
-			}
-			//if(ASTVERBOSE())printf("here temp_construct->ctype is %d\n", temp_construct->ctype);
+		struct ast_construct *temp_construct = currentconstructhead;
+		while(temp_construct->next != NULL){
+			temp_construct = temp_construct->next;
 		}
-		//if(ASTVERBOSE())printf("we are out \n");
-		/* Now we have temp_construct as the last element */
-		switch(temp_construct->ctype){
-			case SEQUENTIAL:temp_construct->ptr.sequential->next.ctype = ITERATIVE;
-					temp_construct->ptr.sequential->next.ptr.iterative = newiternode;
-					break;
-			case SELECTIVE:temp_construct->ptr.selective->next.ctype = ITERATIVE;
-					temp_construct->ptr.selective->next.ptr.iterative = newiternode;
-					break;
-			case ITERATIVE:temp_construct->ptr.iterative->next.ctype = ITERATIVE;
-					temp_construct->ptr.iterative->next.ptr.iterative = newiternode;
-					break;
-		}
+		temp_construct->next = malloc(sizeof(struct ast_construct));
+		temp_construct = temp_construct->next;
+		temp_construct->ctype = ITERATIVE;
+		temp_construct->ptr.iterative = newiternode;
 	}
 	ast_walk_constructs(currentconstructhead);
 }
 
 void ast_walk_constructs(struct ast_construct *head){
 	if(ASTVERBOSE())printf(":AST: Construct walk::::  ");
-	struct ast_construct *temp_construct = malloc(sizeof(struct ast_construct));
-	temp_construct->ctype = head->ctype;
-	if(head->ctype == SEQUENTIAL)
-		temp_construct->ptr.sequential = head->ptr.sequential;
-	if(head->ctype == SELECTIVE)
-		temp_construct->ptr.selective = head->ptr.selective;
-	if(head->ctype == ITERATIVE)
-		temp_construct->ptr.selective = head->ptr.selective;
-	unsigned int flag = 1;
-	while(flag && temp_construct->ctype != NONE){
-		switch (temp_construct->ctype) {
-			case SEQUENTIAL: if(ASTVERBOSE())printf("[AST-SEQ]{%s}  ", temp_construct->ptr.sequential->name);
-					 ast_advanceto_next_sequential_construct(temp_construct, &flag);
-					 break;
-			case SELECTIVE:  if(ASTVERBOSE())printf("[AST-SEL]{%s}  ", temp_construct->ptr.selective->name);
-					 ast_advanceto_next_selective_construct(temp_construct, &flag);
-					 break;
-			case ITERATIVE:  if(ASTVERBOSE())printf("[AST-ITR]{%s}  ", temp_construct->ptr.iterative->name);
-					 ast_advanceto_next_iterative_construct(temp_construct, &flag);
-					 break;
+	struct ast_construct *temp_construct = head;
+	while(temp_construct != NULL){
+		switch(temp_construct->ctype){
+			case SEQUENTIAL: printf("  [SEQUENTIAL]   ");break;
+			case SELECTIVE: printf("   [SELECTIVE]   "); break;
+			case ITERATIVE: printf("   [ITERATIVE]   "); break;
 		}
+		temp_construct = temp_construct->next;
 	}
 	if(ASTVERBOSE())printf("\n" );
 }
@@ -408,7 +296,7 @@ void ast_add_arguments_varname(char *argstr){
 		traverser->next = temparg;
 	}
 
-	printf(":AST: Added functioncall argument {vartype|%s}\n", temparg->argument_str);
+	if(ASTVERBOSE())printf(":AST: Added functioncall argument {vartype|%s}\n", temparg->argument_str);
 	if(ASTVERBOSE())printf(":AST: Current argument list: ");
 	temparg = currentfunccallargshead;
 	while(temparg != NULL){
@@ -449,38 +337,4 @@ void ast_add_seq_return(){
 	currentsequentialhead->child._return = malloc(sizeof(struct ast_sequential_return));
 	currentsequentialhead->child._return->retdata = currentreturnvalhead;
 	currentreturnvalhead = NULL;
-}
-
-void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag){
-	switch(temp_construct->ptr.sequential->next.ctype){
-		case NONE:	*flag = 0; break;
-		case SEQUENTIAL:temp_construct->ctype = temp_construct->ptr.sequential->next.ctype;
-				temp_construct->ptr.sequential = temp_construct->ptr.sequential->next.ptr.sequential; break;
-		case SELECTIVE: temp_construct->ctype = temp_construct->ptr.sequential->next.ctype;
-				temp_construct->ptr.selective = temp_construct->ptr.sequential->next.ptr.selective; break;
-		case ITERATIVE: temp_construct->ctype = temp_construct->ptr.sequential->next.ctype;
-				temp_construct->ptr.iterative = temp_construct->ptr.sequential->next.ptr.iterative; break;
-	}
-}
-void ast_advanceto_next_selective_construct(struct ast_construct *temp_construct, unsigned int *flag){
-	switch(temp_construct->ptr.selective->next.ctype){
-		case NONE:	*flag = 0; break;
-		case SEQUENTIAL: temp_construct->ctype = temp_construct->ptr.selective->next.ctype;
-				temp_construct->ptr.sequential = temp_construct->ptr.selective->next.ptr.sequential; break;
-		case SELECTIVE: temp_construct->ctype = temp_construct->ptr.selective->next.ctype;
-				temp_construct->ptr.selective = temp_construct->ptr.selective->next.ptr.selective; break;
-		case ITERATIVE: temp_construct->ctype = temp_construct->ptr.selective->next.ctype;
-				temp_construct->ptr.iterative = temp_construct->ptr.selective->next.ptr.iterative; break;
-	}
-}
-void ast_advanceto_next_iterative_construct(struct ast_construct *temp_construct, unsigned int *flag){
-	switch(temp_construct->ptr.iterative->next.ctype){
-		case NONE:	*flag = 0;break;
-		case SEQUENTIAL: temp_construct->ctype = temp_construct->ptr.iterative->next.ctype;
-				temp_construct->ptr.sequential = temp_construct->ptr.iterative->next.ptr.sequential; break;
-		case SELECTIVE: temp_construct->ctype = temp_construct->ptr.iterative->next.ctype;
-				temp_construct->ptr.selective = temp_construct->ptr.iterative->next.ptr.selective; break;
-		case ITERATIVE: temp_construct->ctype = temp_construct->ptr.iterative->next.ctype;
-				temp_construct->ptr.iterative = temp_construct->ptr.iterative->next.ptr.iterative; break;
-	}
 }

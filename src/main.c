@@ -12,12 +12,12 @@
 #include "scope_mgmt.h"
 #include "ast.h"
 #include "verbose.h"
+#include "executor.h"
 
 #define DATABUFLEN 2000
 
 /* Function declarations */
 void welcome();
-void complete();
 
 int main(int argc, char *argv[]){
 	/* Print welcome message on screen */
@@ -61,6 +61,9 @@ int main(int argc, char *argv[]){
 				"" };
 	/* Iterate through all the tests */
 	unsigned int i = 0;
+
+	printf("\n\n-------------------------------BEGIN INTERPRETER----------------------------\n\n");
+
 	while(strcmp(testset[i],"")){
 		printf("\nMAIN>>>  =====PARSING FILE \"%s\"=====\n", testset[i]);
 		if(set_read_file(testset[i]))
@@ -68,6 +71,10 @@ int main(int argc, char *argv[]){
 		else{
 			yyparse();
 			printf("\nMAIN>>>  =====ANALYSIS AND AST SYNTHESIS DONE FOR \"%s\"=====\n", testset[i]);
+			printf("\nMAIN>>>  =====BEGIN EXECUTION FOR \"%s\"=====\n", testset[i]);
+			int retval = exec_begin_execution();
+			printf("\nMAIN>>>  =====EXECUTION COMPLETED FOR \"%s\". ENDED WITH RETURN VALUE {%d}\n", testset[i], retval);
+
 		}
 		i++;
 	}
@@ -80,8 +87,4 @@ void welcome(){
 	printf("|      HLang Interpreter - %s   |\n", version_name[VERSION]);
 	printf("+-%s------------------------------------%s-+\n", WIP?"wip":"---", DRAFT );
 	//verbose_set_lexer();
-}
-
-void complete(){
-	printf("\n+-COMPLETE----------------------+\n");
 }

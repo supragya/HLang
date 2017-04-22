@@ -100,35 +100,31 @@ struct ast_sequential_varassignment{
 	struct var_assignments *assignments;
 };
 
-
-
 struct ast_construct{
 	enum ast_constructtype_t ctype;
 	union ast_nextconstruct_ptr ptr;
+	struct ast_construct *next;
 };
 
 struct ast_sequentialnode{
 	char *name;
 	enum ast_selectiveconstructtype childtype;
 	union ast_sequential_code_ptr child;
-	struct ast_construct next;
 };
 
 struct ast_selectivenode{
 	char *name;
 	enum ast_constructtype_t nextconstructtype;
-	struct ast_construct next;
 };
 
 struct ast_iterativenode{
 	char *name;
 	enum ast_iterativeconstructtype childtype;
 	void *child;
-	struct ast_construct next;
 };
 
 
-
+struct ast_root_node *rootnode;
 
 
 int ast_init();

@@ -1,13 +1,9 @@
 #!/script/HLang
 
-function foo{}
 function main{
 	declare $na, $nn = 60, $bb[20], $nanari = $ctr+620-20;
-	#if("a"=="b"){}
-	#while($shit == 10){}
-	declare map $torvalds = {"run" is 10, "brace" is 90, "grow" is 80, "shutter", 9}, $total = {"totaldat", 999};
-	<% test shellecho >;
-	#declare $var;
+	declare map $nut;
+	<% shellecho >;
+	if($var=="n"){}
 }
-function main2{
-}
+function foo{}
