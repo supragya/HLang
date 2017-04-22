@@ -15,4 +15,4 @@ clean:
 reset:
 	@echo "+--Reset to bare sources------------+"
 	@echo "Any errors suggesting files not found are okay"
-	@-rm -r build/ headers/buildtime* bin
+	@-rm -r build headers/buildtime* bin

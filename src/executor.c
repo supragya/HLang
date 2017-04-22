@@ -64,8 +64,10 @@ struct ast_construct* exec_provide_constructlist_for_function(char *functionname
 int exec_sequential_construct(struct ast_sequentialnode *seq){
 	switch(seq->childtype){
 		case AST_GENVARDECL: 	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_GENVARDECL\n");
+					return exec_genvardecl(seq->child.genvardecl);
 					break;
 		case AST_MAPVARDECL:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_MAPVARDECL\n");
+					return exec_mapvardecl(seq->child.mapvardecl);
 					break;
 		case AST_ASSIGNMENTS:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_ASSIGNMENTS\n");
 					break;
@@ -84,5 +86,26 @@ int exec_selective_construct(struct ast_selectivenode *sel){
 }
 
 int exec_iterative_construct(struct ast_iterativenode *iter){
+	return 0;
+}
+
+int exec_genvardecl(struct ast_sequential_genvardecl *node){
+	if(EXECVERBOSE())printf(":EXEC: Declaring general variables in vms variable table\n");
+	struct vardecl_assignmentlist *list = node->list;
+	variable_ptr_t currentbinlocation = 0;
+	while(list != NULL){
+		currentbinlocation = vms_add_new_variable(list->varname, 0);
+		if(currentbinlocation == TOTAL_SLOTS){
+			if(EXECVERBOSE())printf(":EXEC: No more space in vms variable table\n");
+			return 1;
+		}
+		vms_assign_to_bin_location(currentbinlocation, list->value);
+		list = list->next;
+	}
+	return 0;
+}
+
+int exec_mapvardecl(struct ast_sequential_mapvardecl *node){
+	if(EXECVERBOSE())printf(":EXEC: Declaring map variables in vms map list\n");
 	return 0;
 }

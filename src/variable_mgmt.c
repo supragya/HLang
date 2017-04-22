@@ -7,6 +7,7 @@
 #include "buildtime_hlang-parser.h"
 #include "hlang-parser.h"
 #include "variable_mgmt.h"
+#include "verbose.h"
 unsigned long locations_available = TOTAL_SLOTS;
 
 variable_t storage[TOTAL_SLOTS];
@@ -20,14 +21,21 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		if(locations_available !=0){
 			/* We have locations available for variable storage */
 			position = vms_find_valid_location(new_varname);
-			printf(":VMS: For %s, the position is: %ld\n", new_varname, position);
+			if(VMSVERBOSE())printf(":VMS: For %s, the position is: %ld\n", new_varname, position);
 		}
 		else{
 			/* Ran out of memory */
 			yyerror("Not enough memory to save variables");
 			return TOTAL_SLOTS;
 		}
-
+		if(vms_is_maptype(new_varname)){
+			if(VMSVERBOSE())printf(":VMS: %s is a MELNAME\n", new_varname);
+			char *mapname = vms_map_part(new_varname);
+			if(!vms_is_mapname_exists(mapname,0)){
+				if(VMSVERBOSE())printf(":VMS: WARNING: Map name %s of MELNAME %s does not exist in map list. VMS attempts its addition.\n", mapname, new_varname);
+				if(vms_add_new_map(mapname,0)) return TOTAL_SLOTS;
+			}
+		}
 		/* Populating the variable data */
 		storage[position].name		= (char*)malloc(sizeof(char)*(strlen(new_varname)+1));
 		strcpy(storage[position].name, new_varname);
@@ -38,9 +46,6 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 
 		/* Decrement the number of locations available by one */
 		locations_available--;
-
-		vms_display_map_list();
-		vms_display_variable_table();
 
 		return position;
 	}
@@ -57,9 +62,9 @@ variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope){
 	unsigned int i;
 	for(i=0; i<len && mapname[i] != '['; i++);
 	mapname[i] = '\0';
-	printf(":VMS: Map element storage with mapname: %s\n", mapname);
+	if(VMSVERBOSE())printf(":VMS: Map element storage with mapname: %s\n", mapname);
 	if(!vms_is_mapname_exists(mapname, scope)){
-		printf(";VMS: [Error] Assigning map element of undefined map\n");
+		if(VMSVERBOSE())printf(";VMS: [Error] Assigning map element of undefined map\n");
 		return TOTAL_SLOTS;
 	}
 	else{
@@ -71,12 +76,12 @@ int vms_add_new_map(char *new_varname, unsigned int scope){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
 
-	printf(":VMS: Adding new map structure\n");
+	if(VMSVERBOSE())printf(":VMS: Adding new map structure\n");
 
 	/* Check whether already declared */
 	while(tempptr != NULL){
 		if(!strcmp(tempptr->mapname, new_varname) && tempptr->scope == scope){
-			printf(":VMS: [Error] Already declared the map with name %s and scope %d\n", new_varname, scope);
+			if(VMSVERBOSE())printf(":VMS: [Error] Already declared the map with name %s and scope %d\n", new_varname, scope);
 			return 1;
 		}
 		tempptr = tempptr->next;
@@ -85,7 +90,7 @@ int vms_add_new_map(char *new_varname, unsigned int scope){
 	/* Ready to add map */
 	tempptr = (struct map_list*)malloc(sizeof(struct map_list));
 	if (!tempptr){
-		printf(":VMS: [Error] Cannot allocate memory for map variable\n");
+		if(VMSVERBOSE())printf(":VMS: [Error] Cannot allocate memory for map variable\n");
 		return 1;
 	}
 	tempptr->mapname = malloc(sizeof(char)*(strlen(new_varname)+1));
@@ -122,7 +127,7 @@ unsigned long vms_calchash(char *varname){
 }
 
 void vms_assign_to_bin_location(variable_ptr_t var, char *str){
-	printf(":VMS: Bin location %ld is assigned %s\n", var, str);
+	if(VMSVERBOSE())printf(":VMS: Bin location %ld is assigned %s\n", var, str);
 	if (var >= TOTAL_SLOTS)
 		yyerror("Undefined variable_ptr_t value");
 	else if(!storage[var].occupation == OCCUPIED)
@@ -157,35 +162,36 @@ int vms_init(){
 
 void vms_display_variable_table(){
 
-	printf("<<<<<<<<<<<<<<<< :VMS: VARIABLE TABLE >>>>>>>>>>>>>>>>>>>>>>>\n");
+	if(VMSVERBOSE())printf("<<<<<<<<<<<<<<<< :VMS: VARIABLE TABLE >>>>>>>>>>>>>>>>>>>>>>>\n");
 	unsigned int i;
 	while (i!=TOTAL_SLOTS){
-		if(storage[i].occupation == AVAILABLE)
-			printf("%d\tAVAILABLE \n", i);
+		if(storage[i].occupation == AVAILABLE){
+			if(VMSVERBOSE())printf("%d\tAVAILABLE \n", i);
+		}
 		else{
-			printf("%d\tNAME: %s | VALUE: %s | SCOPE: %d\n", i, storage[i].name, storage[i].value, storage[i].scope);
+			if(VMSVERBOSE())printf("%d\tNAME: %s | VALUE: %s | SCOPE: %d\n", i, storage[i].name, storage[i].value, storage[i].scope);
 		}
 		i++;
 	}
-	printf("------------------------------------------------------------\n");
+	if(VMSVERBOSE())printf("------------------------------------------------------------\n");
 }
 
 void vms_display_map_list(){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
-	printf("<<<<<<<<<<<<<<<< :VMS: MAP LIST >>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+	if(VMSVERBOSE())printf("<<<<<<<<<<<<<<<< :VMS: MAP LIST >>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
 
 	if(tempptr == NULL){
-		printf("(NULL)\n");
+		if(VMSVERBOSE())printf("(NULL)\n");
 	}
 	else{
 		while(tempptr != NULL){
-			printf("[%s,%d]", tempptr->mapname, tempptr->scope);
+			if(VMSVERBOSE())printf("[%s,%d]", tempptr->mapname, tempptr->scope);
 			tempptr = tempptr->next;
 		}
-		printf("\n");
+		if(VMSVERBOSE())printf("\n");
 	}
-	printf("------------------------------------------------------------\n");
+	if(VMSVERBOSE())printf("------------------------------------------------------------\n");
 }
 
 int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
@@ -200,7 +206,7 @@ int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
 }
 
 void vms_decommission_scope(unsigned int scope){
-	printf(":VMS Decommission scope %d\n", scope);
+	if(VMSVERBOSE())printf(":VMS Decommission scope %d\n", scope);
 	/* Decommission from variable table */
 	unsigned int i = 0;
 	while (i!=TOTAL_SLOTS){
@@ -243,7 +249,7 @@ void vms_decommission_scope(unsigned int scope){
 }
 
 int vms_is_mapname_exists(char *mapname, unsigned int scope){
-	printf(":VMS: is mapname exists\n");
+	if(VMSVERBOSE())printf(":VMS: is mapname exists\n");
 	vms_display_map_list();
 	struct map_list *tempptr;
 	tempptr = mapliststart;
@@ -254,4 +260,34 @@ int vms_is_mapname_exists(char *mapname, unsigned int scope){
 		tempptr = tempptr->next;
 	}
 	return 0;
+}
+
+int vms_is_maptype(char *varname){
+	int len = strlen(varname);
+	if (varname[--len]==']'){
+		while(len >= 0){
+			if(varname[len] == '[')
+				return 1;
+			len--;
+		}
+	}
+	return 0;
+}
+
+char *vms_map_part(char *mapelement){
+	int len = strlen(mapelement);
+	int pos = 0;
+	while(pos < len){
+		if(mapelement[pos] == '[')
+			break;
+		pos++;
+	}
+	char *ret = malloc(sizeof(char)*(pos + 1));
+	unsigned int i = 0;
+	while(i<pos){
+		ret[i] = mapelement[i];
+		i++;
+	}
+	ret[pos]='\0';
+	return ret;
 }
