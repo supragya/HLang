@@ -98,6 +98,7 @@ int vms_add_new_map(char *new_varname, unsigned int scope){
 	tempptr->scope = scope;
 	tempptr->next = mapliststart;
 	mapliststart = tempptr;
+	vms_display_map_list();
 	return 0;
 }
 

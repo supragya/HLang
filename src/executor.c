@@ -3,6 +3,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include "variable_mgmt.h"
 #include "scope_mgmt.h"
 #include "ast.h"
@@ -96,7 +97,7 @@ int exec_genvardecl(struct ast_sequential_genvardecl *node){
 	while(list != NULL){
 		currentbinlocation = vms_add_new_variable(list->varname, 0);
 		if(currentbinlocation == TOTAL_SLOTS){
-			if(EXECVERBOSE())printf(":EXEC: No more space in vms variable table\n");
+			if(EXECVERBOSE())printf(":EXEC: No more space in vms variable table. Aborting execution\n");
 			return 1;
 		}
 		vms_assign_to_bin_location(currentbinlocation, list->value);
@@ -107,5 +108,43 @@ int exec_genvardecl(struct ast_sequential_genvardecl *node){
 
 int exec_mapvardecl(struct ast_sequential_mapvardecl *node){
 	if(EXECVERBOSE())printf(":EXEC: Declaring map variables in vms map list\n");
+	struct mapvarlist *list = node->mapvarlist;
+	while(list != NULL){
+		if(vms_add_new_map(list->mapname,0)){
+			if(EXECVERBOSE())printf(":EXEC: Error declaring map variable. Aborting execution\n");
+			return 1;
+		}
+		if(exec_add_keyval_pairs(list->mapname, list->keyvalpairs)){
+			if(EXECVERBOSE())printf(":EXEC: Error assigning spaces for map keyval pairs. Aborting execution\n");
+			return 1;
+		}
+		list = list->next;
+	}
 	return 0;
+}
+
+int exec_add_keyval_pairs(char *mapname, struct keyvalpairs *pairs){
+	char *temp;
+	int len = strlen(mapname);
+	/* Prepare name */
+	while(pairs != NULL){
+		temp = malloc(sizeof(char)*(len + strlen(pairs->key) + 3));
+		if(!temp){
+			if(EXECVERBOSE())printf(":EXEC: Error allocating space for keyval pair {%s|%s}\n", pairs->key, pairs->value);
+			return 1;
+		}
+		strcpy(temp, mapname);
+		temp[len] = '[';
+		strcpy(temp+len+1, pairs->key);
+		temp[len+1+strlen(pairs->key)] = ']';
+		temp[len+1+strlen(pairs->key)+1] = '\0';
+		if(EXECVERBOSE())printf(":EXEC: Adding keyval pair {%s|%s}\n", temp, pairs->value);
+		variable_ptr_t currentbinloc = vms_add_new_variable(temp, 0);
+		if(currentbinloc == TOTAL_SLOTS){
+			if(EXECVERBOSE())printf(":EXEC: Error allocating space for keyval pair {%s|%s}\n", pairs->key, pairs->value);
+			return 1;
+		}
+		vms_assign_to_bin_location(currentbinloc, pairs->value);
+		pairs = pairs->next;
+	}
 }

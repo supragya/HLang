@@ -6,3 +6,4 @@ int exec_selective_construct(struct ast_selectivenode *seq);
 int exec_iterative_construct(struct ast_iterativenode *seq);
 int exec_genvardecl(struct ast_sequential_genvardecl *node);
 int exec_mapvardecl(struct ast_sequential_mapvardecl *node);
+int exec_add_keyval_pairs(char *mapname, struct keyvalpairs *pairs);

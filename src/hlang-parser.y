@@ -99,7 +99,7 @@ map_variablelist:
 
 map_discrete_variable:
 	VARNAME						{if(PARSERVERBOSE())printf("\t<MAP DISCRETE VARIABLE: VARNAME FOUND| %s>\n", $1); ast_add_mapdeclnode($1);}
-	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS>\n"); ast_add_mapdeclnode($1);}
+	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<MAP DISCRETE VARIABLE: KEYVALPAIRS| %s>\n", $1); ast_add_mapdeclnode($1);}
 	;
 
 keyvalpairs:
@@ -195,11 +195,11 @@ expr_successor:
 	;
 
 discrete_term:
-	VARNAME							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: VARNAME>\n");}
-	|MELNAME						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: MELNAME>\n");}
-	|STRING							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: STRING>\n");}
-	|NSTRING						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: NSTRING>\n");}
-	|ARGVAR							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: ARGVAR>\n");}
+	VARNAME							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: VARNAME>\n"); ast_add_expr3_discrete_term_variable($1);}
+	|MELNAME						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: MELNAME>\n"); ast_add_expr3_discrete_term_variable($1);}
+	|STRING							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: STRING>\n"); ast_add_expr3_discrete_term_string($1);}
+	|NSTRING						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: NSTRING>\n"); ast_add_expr3_discrete_term_string($1);}
+	|ARGVAR							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: ARGVAR>\n"); ast_add_expr3_discrete_term_variable($1);}
 	|functioncall						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: FUNCTIONCALL>\n");}
 	|SHELLECHO						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: SHELLECHO>\n");}
 	;

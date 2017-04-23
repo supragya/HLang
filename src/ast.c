@@ -7,14 +7,6 @@
 #include "ast.h"
 #include "verbose.h"
 
-struct ast_construct *currentconstructhead;
-struct ast_sequentialnode *currentsequentialhead;
-struct keyvalpairs *currentkeyvalpairshead;
-struct mapvarlist *currentmapvarlisthead;
-struct vardecl_assignmentlist *currentvardeclassignmentlisthead;
-struct functioncallargs *currentfunccallargshead;
-struct returnval *currentreturnvalhead;
-
 int ast_init(){
 	rootnode = malloc(sizeof(struct ast_root_node));
 	currentconstructhead = NULL;
@@ -27,6 +19,12 @@ int ast_init(){
 	currentvardeclassignmentlisthead = NULL;
 	currentfunccallargshead = NULL;
 	currentreturnvalhead = NULL;
+	currentexpression1head = NULL;
+	currentexpression2head = NULL;
+	currentexpression3head = NULL;
+	currentexpression3discretermhead = NULL;
+	currentexpression3unaryprecederhead = NULL;
+	currentexpression3successorhead = NULL;
 	return 0;
 }
 
@@ -156,9 +154,9 @@ void ast_walk_constructs(struct ast_construct *head){
 	struct ast_construct *temp_construct = head;
 	while(temp_construct != NULL){
 		switch(temp_construct->ctype){
-			case SEQUENTIAL: printf("  [SEQUENTIAL]   ");break;
-			case SELECTIVE: printf("   [SELECTIVE]   "); break;
-			case ITERATIVE: printf("   [ITERATIVE]   "); break;
+			case SEQUENTIAL: if(ASTVERBOSE())printf("  [SEQUENTIAL]   ");break;
+			case SELECTIVE: if(ASTVERBOSE())printf("   [SELECTIVE]   "); break;
+			case ITERATIVE: if(ASTVERBOSE())printf("   [ITERATIVE]   "); break;
 		}
 		temp_construct = temp_construct->next;
 	}
@@ -197,6 +195,7 @@ void ast_make_keyvalpair(char *key, char *value){
 void ast_add_mapdeclnode(char *mapname){
 	struct mapvarlist *newmapvar = malloc(sizeof(struct mapvarlist));
 	newmapvar->mapname = malloc(sizeof(char)*(strlen(mapname)+1));
+	strcpy(newmapvar->mapname, mapname);
 	newmapvar->keyvalpairs = currentkeyvalpairshead;
 	currentkeyvalpairshead = NULL;
 	newmapvar->next = currentmapvarlisthead;
@@ -337,4 +336,46 @@ void ast_add_seq_return(){
 	currentsequentialhead->child._return = malloc(sizeof(struct ast_sequential_return));
 	currentsequentialhead->child._return->retdata = currentreturnvalhead;
 	currentreturnvalhead = NULL;
+}
+
+void ast_add_expr3_discrete_term_string(char *str){
+	if(ASTVERBOSE())printf(":AST: Adding expression 3 discrete term to the expression with string %s\n", str);
+	struct expr_discrete_termll *tempterm = malloc(sizeof(struct expr_discrete_termll));
+	tempterm->next = currentexpression3discretermhead;
+	currentexpression3discretermhead = tempterm;
+	tempterm->data = malloc(sizeof(struct expr_discrete_term));
+	tempterm->data->type = DISCRETE_STRING;
+	tempterm->data->termdata = malloc(sizeof(char)*(strlen(str)+1));
+	strcpy(tempterm->data->termdata, str);
+	ast_display_expr3_discrete_termll_status();
+}
+void ast_add_expr3_discrete_term_variable(char *varname){
+	if(ASTVERBOSE())printf(":AST: Adding expression 3 discrete term to the expression with varname %s\n", varname);
+	struct expr_discrete_termll *tempterm = malloc(sizeof(struct expr_discrete_termll));
+	tempterm->next = currentexpression3discretermhead;
+	currentexpression3discretermhead = tempterm;
+	tempterm->data = malloc(sizeof(struct expr_discrete_term));
+	tempterm->data->type = DISCRETE_VARIABLE;
+	tempterm->data->termdata = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(tempterm->data->termdata, varname);
+	ast_display_expr3_discrete_termll_status();
+}
+void ast_add_expr3_discrete_term_functioncall(){
+
+}
+void ast_add_expr3_discrete_term_shellecho(char *shellecho){
+
+}
+
+void ast_display_expr3_discrete_termll_status(){
+	if(ASTVERBOSE())printf(":AST: Current expression3 discrete term LL state: ");
+	struct expr_discrete_termll *tempterm = currentexpression3discretermhead;
+	while(tempterm != NULL){
+		switch(tempterm->data->type){
+			case DISCRETE_STRING: printf("  {string|%s}  ", tempterm->data->termdata); break;
+			case DISCRETE_VARIABLE: printf("  {variable|%s}  ", tempterm->data->termdata); break;
+		}
+		tempterm = tempterm->next;
+	}
+	printf("\n");
 }

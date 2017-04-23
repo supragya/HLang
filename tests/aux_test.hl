@@ -1,9 +1,6 @@
 #!/script/HLang
 
 function main{
-	declare $na, $nn = 60, $bb[20], $nanari = $ctr+620-20;
-	declare map $nut;
-	<% shellecho >;
-	if($var=="n"){}
+	$t = 90+20+$num;
 }
 function foo{}
