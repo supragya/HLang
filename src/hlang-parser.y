@@ -196,50 +196,50 @@ discrete_term:
 	|STRING							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: STRING>\n"); ast_add_expr3_discrete_term_string($1);}
 	|NSTRING						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: NSTRING>\n"); ast_add_expr3_discrete_term_string($1);}
 	|ARGVAR							{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: ARGVAR>\n"); ast_add_expr3_discrete_term_variable($1);}
-	|functioncall						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: FUNCTIONCALL>\n");}
-	|SHELLECHO						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: SHELLECHO>\n");}
+	|functioncall						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: FUNCTIONCALL>\n"); ast_add_expr3_discrete_term_functioncall($1);}
+	|SHELLECHO						{if(PARSERVERBOSE())printf("\t<DISCRETE TERM: SHELLECHO>\n"); ast_add_expr3_discrete_term_shellecho($1);}
 	;
 
 
 
 /* Boolean conditions set */
 conditions:
-	conditions_and_only				{if(PARSERVERBOSE())printf("\t<CONDITIONS: AND ONLY CONDITION>\n");}
-	|conditions LOR conditions_and_only		{if(PARSERVERBOSE())printf("\t<CONDITIONS: LOR AND CONDITION>\n");}
+	conditions_and_only				{if(PARSERVERBOSE())printf("\t<CONDITIONS: AND ONLY CONDITION>\n"); ast_add_condition1_condition2();}
+	|conditions LOR conditions_and_only		{if(PARSERVERBOSE())printf("\t<CONDITIONS: LOR AND CONDITION>\n"); ast_add_condition1_lor_condition2();}
 	;
 
 conditions_and_only:
-	discrete_condition				{if(PARSERVERBOSE())printf("\t<AND ONLY CONDITION: DISCRETE CONDITION>\n");}
-	|conditions_and_only LAND discrete_condition	{if(PARSERVERBOSE())printf("\t<AND ONLY CONDITION: LAND AND CONDITION>\n");}
+	discrete_condition				{if(PARSERVERBOSE())printf("\t<AND ONLY CONDITION: DISCRETE CONDITION>\n"); ast_add_condition2_condition3();}
+	|conditions_and_only LAND discrete_condition	{if(PARSERVERBOSE())printf("\t<AND ONLY CONDITION: LAND AND CONDITION>\n"); ast_add_condition2_land_condition3();}
 	;
 
 discrete_condition:
-	unary_condition_opr PARANOPEN conditions PARANCLOSE	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: UNARY PARAN CONDITION>\n");}
-	|conditioncomponent relopr conditioncomponent	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP REL CONDITIONCOMP>\n");}
-	|conditioncomponent				{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP>\n");}
+	unary_condition_opr PARANOPEN conditions PARANCLOSE	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: UNARY PARAN CONDITION>\n"); ast_add_discrete_condition_unarycondition();}
+	|conditioncomponent relopr conditioncomponent	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP REL CONDITIONCOMP>\n"); ast_add_discrete_condition_comp_rel_comp();}
+	|conditioncomponent				{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP>\n"); ast_add_discrete_condition_comp();}
 	;
 
 unary_condition_opr:
-	%empty						{if(PARSERVERBOSE())printf("\t<NO UNARY TO CONDITION>\n");}
-	|EXCLAMATION					{if(PARSERVERBOSE())printf("\t<NOT FOUND: UNARY TO CONDITION>\n");}
+	EXCLAMATION					{if(PARSERVERBOSE())printf("\t<NOT FOUND: UNARY TO CONDITION>\n"); ast_add_condition_unary(NEG_YES);}
+	|%empty						{if(PARSERVERBOSE())printf("\t<NO UNARY TO CONDITION>\n");}
 	;
 
 conditioncomponent:
-	functioncall					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: FUNCTIONCALL>\n");}
-	|SHELLECHO					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: SHELLECHO>\n");}
-	|MELNAME					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: MELNAME>\n");}
-	|VARNAME					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: VARNAME>\n");}
-	|NSTRING					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: NSTRING>\n");}
-	|STRING						{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: STRING>\n");}
+	functioncall					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: FUNCTIONCALL>\n"); ast_add_condition_component_functioncall($1);}
+	|SHELLECHO					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: SHELLECHO>\n"); ast_add_condition_component_shellecho($1);}
+	|MELNAME					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: MELNAME>\n"); ast_add_condition_component_varname($1);}
+	|VARNAME					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: VARNAME>\n"); ast_add_condition_component_varname($1);}
+	|NSTRING					{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: NSTRING>\n"); ast_add_condition_component_string($1);}
+	|STRING						{if(PARSERVERBOSE())printf("\t<CONDITIONCOMPONENT: STRING>\n"); ast_add_condition_component_string($1);}
 	;
 
 relopr:
-	EQ						{if(PARSERVERBOSE())printf("\t<RELOPR: EQ>\n");}
-	|NQ						{if(PARSERVERBOSE())printf("\t<RELOPR: NQ>\n");}
-	|LT						{if(PARSERVERBOSE())printf("\t<RELOPR: LT>\n");}
-	|GT						{if(PARSERVERBOSE())printf("\t<RELOPR: GT>\n");}
-	|LE						{if(PARSERVERBOSE())printf("\t<RELOPR: LE>\n");}
-	|GE						{if(PARSERVERBOSE())printf("\t<RELOPR: GE>\n");}
+	EQ						{if(PARSERVERBOSE())printf("\t<RELOPR: EQ>\n"); ast_add_condition_relopr(REL_EQ);}
+	|NQ						{if(PARSERVERBOSE())printf("\t<RELOPR: NQ>\n"); ast_add_condition_relopr(REL_NQ);}
+	|LT						{if(PARSERVERBOSE())printf("\t<RELOPR: LT>\n"); ast_add_condition_relopr(REL_LT);}
+	|GT						{if(PARSERVERBOSE())printf("\t<RELOPR: GT>\n"); ast_add_condition_relopr(REL_GT);}
+	|LE						{if(PARSERVERBOSE())printf("\t<RELOPR: LE>\n"); ast_add_condition_relopr(REL_LE);}
+	|GE						{if(PARSERVERBOSE())printf("\t<RELOPR: GE>\n"); ast_add_condition_relopr(REL_GE);}
 	;
 
 
@@ -259,7 +259,8 @@ discrete_argument:
 	|VARNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : VARNAME>\n"); ast_add_arguments_varname($1);}
 	|ARGVAR						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : ARGVAR>\n"); ast_add_arguments_varname($1);}
 	|MELNAME					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : MELNAME>\n"); ast_add_arguments_varname($1);}
-	|functioncall					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : FUNCTIONCALL>\n");}
+	|functioncall					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : FUNCTIONCALL>\n"); ast_add_arguments_functioncall($1);}
+	|SHELLECHO					{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS : SHELLECHO>\n"); ast_add_arguments_shellecho($1);}
 	;
 
 /* Return statement */

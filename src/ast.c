@@ -26,6 +26,12 @@ int ast_init(){
 	currentexpression3unaryprecederhead = NULL;
 	currentexpression3successorhead = NULL;
 	currentvarassignmentshead = NULL;
+	currentcondition1head = NULL;
+	currentcondition2head = NULL;
+	currentcondition3head = NULL;
+	currentconditioncomponenthead = NULL;
+	currentreloprhead = NULL;
+	currentconditionnegationhead = NULL;
 	return 0;
 }
 
@@ -308,6 +314,7 @@ void ast_add_arguments_varname(char *argstr){
 	}
 	if(ASTVERBOSE())printf("\n");
 }
+
 void ast_add_seq_functioncall(char *functionname){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_FUNCTIONCALL;
@@ -343,6 +350,7 @@ void ast_add_expr3_discrete_term_string(char *str){
 	tempterm->data->termdata = malloc(sizeof(char)*(strlen(str)+1));
 	strcpy(tempterm->data->termdata, str);
 	ast_display_expr3_discrete_termll_status();
+	ast_display_exprll_status();
 }
 void ast_add_expr3_discrete_term_variable(char *varname){
 	if(ASTVERBOSE())printf(":AST: Adding expression 3 discrete term to the expression with varname %s\n", varname);
@@ -354,11 +362,9 @@ void ast_add_expr3_discrete_term_variable(char *varname){
 	tempterm->data->termdata = malloc(sizeof(char)*(strlen(varname)+1));
 	strcpy(tempterm->data->termdata, varname);
 	ast_display_expr3_discrete_termll_status();
+	ast_display_exprll_status();
 }
-void ast_add_expr3_discrete_term_functioncall(){
-}
-void ast_add_expr3_discrete_term_shellecho(char *shellecho){
-}
+
 void ast_add_expr3_unprec(enum expr_unary_preceder_type type){
 	if(ASTVERBOSE())printf(":AST: Adding expression 3 unary precedor type: ");
 	switch(type){
@@ -371,7 +377,7 @@ void ast_add_expr3_unprec(enum expr_unary_preceder_type type){
 	currentexpression3unaryprecederhead = temp;
 	temp->data = malloc(sizeof(struct expr_unary_preceder));
 	temp->data->precedertype = type;
-	//ast_display_expr3_unary_precll_status();
+	ast_display_exprll_status();
 }
 void ast_display_expr3_discrete_termll_status(){
 	if(ASTVERBOSE())printf(":AST: Current expression3 discrete term LL state: ");
@@ -396,6 +402,7 @@ void ast_display_expr3_unary_precll_status(){
 		temp = temp->next;
 	}
 	if(ASTVERBOSE())printf("\n");
+	ast_display_exprll_status();
 }
 void ast_add_expr3_unprecdiscrsucc(){
 	if(ASTVERBOSE())printf(":AST: Combining for expression 3 using format UNPREC DISCR SUCC  ");
@@ -440,6 +447,9 @@ void ast_display_exprll_status(){
 	struct expr_expression1ll *temp1 = currentexpression1head;
 	struct expr_expression2ll *temp2 = currentexpression2head;
 	struct expr_expression3ll *temp3 = currentexpression3head;
+	struct expr_discrete_termll *temp4 = currentexpression3discretermhead;
+	struct expr_unary_precederll *temp5 = currentexpression3unaryprecederhead;
+	struct expr_successorll *temp6 = currentexpression3successorhead;
 	while(temp1 != NULL){
 		cnt++;
 		temp1 = temp1->next;
@@ -456,7 +466,25 @@ void ast_display_exprll_status(){
 		cnt++;
 		temp3 = temp3->next;
 	}
-	if(ASTVERBOSE())printf("[expr3 %d] \n", cnt);
+	if(ASTVERBOSE())printf("[expr3 %d] ", cnt);
+	cnt =0;
+	while(temp4 != NULL){
+		cnt++;
+		temp4 = temp4->next;
+	}
+	if(ASTVERBOSE())printf("[exprdiscr %d] ", cnt);
+	cnt =0;
+	while(temp5 != NULL){
+		cnt++;
+		temp5 = temp5->next;
+	}
+	if(ASTVERBOSE())printf("[exprunary %d] ", cnt);
+	cnt =0;
+	while(temp6 != NULL){
+		cnt++;
+		temp6 = temp6->next;
+	}
+	if(ASTVERBOSE())printf("[exprsucc %d] \n", cnt);
 }
 void ast_add_expr_expr2(){
 	if(ASTVERBOSE())printf(":AST: expression2 shifted to expression1\n");
@@ -576,4 +604,246 @@ void ast_add_seq_varassignment(){
 	currentsequentialhead->childtype = AST_ASSIGNMENTS;
 	currentsequentialhead->child.assignments = temp;
 	if(ASTVERBOSE())printf(":AST: Added variable assignment statement\n");
+}
+void ast_add_condition_relopr(enum relopr rel){
+	if(ASTVERBOSE())printf(":AST: Added relopr ");
+	struct reloprll *temp = malloc(sizeof(struct reloprll));
+	temp->next = currentreloprhead;
+	currentreloprhead = temp;
+	temp->rel = rel;
+	switch(temp->rel){
+		case REL_GE: if(ASTVERBOSE())printf("REL_GE "); break;
+		case REL_NQ: if(ASTVERBOSE())printf("REL_NQ "); break;
+		case REL_EQ: if(ASTVERBOSE())printf("REL_EQ "); break;
+		case REL_GT: if(ASTVERBOSE())printf("REL_GT "); break;
+		case REL_LT: if(ASTVERBOSE())printf("REL_LT "); break;
+		case REL_LE: if(ASTVERBOSE())printf("REL_LE "); break;
+	}
+	if(ASTVERBOSE())printf("to relopr LL\n");
+	ast_display_condll_stauts();
+}
+void ast_add_condition_unary(enum negation neg){
+	if(ASTVERBOSE())printf(":AST: Added unary condtion modifier ");
+	struct conditionnegationll *temp = malloc(sizeof(struct conditionnegationll));
+	temp->neg = neg;
+	temp->next = currentconditionnegationhead;
+	currentconditionnegationhead = temp;
+	switch(temp->neg){
+		case NEG_YES: if(ASTVERBOSE())printf("NEG_YES "); break;
+		case NEG_NO: if(ASTVERBOSE())printf("NEG_NO "); break;
+	}
+	if(ASTVERBOSE())printf(" \n");
+	ast_display_condll_stauts();
+}
+void ast_add_condition_component_string(char *str){
+	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {string|%s}\n", str);
+	struct conditioncomponentll *temp = malloc(sizeof(struct conditioncomponentll));
+	temp->data = malloc(sizeof(struct conditioncomponent));
+	temp->next = currentconditioncomponenthead;
+	currentconditioncomponenthead = temp;
+	temp->data->type  = COMP_STR;
+	temp->data->name = malloc(sizeof(char)*(strlen(str)+1));
+	strcpy(temp->data->name, str);
+	ast_display_condll_stauts();
+}
+void ast_add_condition_component_varname(char *varname){
+	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {varname|%s}\n", varname);
+	struct conditioncomponentll *temp = malloc(sizeof(struct conditioncomponentll));
+	temp->data = malloc(sizeof(struct conditioncomponent));
+	temp->next = currentconditioncomponenthead;
+	currentconditioncomponenthead = temp;
+	temp->data->type  = COMP_VARNAME;
+	temp->data->name = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(temp->data->name, varname);
+	ast_display_condll_stauts();
+}
+void ast_add_condition_component_shellecho(char *echo){
+	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {shellecho|%s}\n", echo);
+	struct conditioncomponentll *temp = malloc(sizeof(struct conditioncomponentll));
+	temp->data = malloc(sizeof(struct conditioncomponent));
+	temp->next = currentconditioncomponenthead;
+	currentconditioncomponenthead = temp;
+	temp->data->type  = COMP_SHELLECHO;
+	temp->data->shellecho = malloc(sizeof(struct ast_sequential_shellecho));
+	temp->data->shellecho->value = malloc(sizeof(char)*(strlen(echo)+1));
+	strcpy(temp->data->shellecho->value, echo);
+	ast_display_condll_stauts();
+}
+void ast_add_condition_component_functioncall(char *funcname){
+	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {functioncall|%s}\n", funcname);
+	struct conditioncomponentll *temp = malloc(sizeof(struct conditioncomponentll));
+	temp->data = malloc(sizeof(struct conditioncomponent));
+	temp->next = currentconditioncomponenthead;
+	currentconditioncomponenthead = temp;
+	temp->data->type = COMP_FUNC;
+	temp->data->func = malloc(sizeof(struct ast_sequential_functioncall));
+	temp->data->func->functionname = malloc(sizeof(char)*(strlen(funcname)+1));
+	temp->data->func->args = currentfunccallargshead;
+	currentfunccallargshead = NULL;
+	ast_display_condll_stauts();
+}
+void ast_add_condition1_condition2(){
+	if(ASTVERBOSE())printf(":AST: Shifting condition2 element to condition1\n");
+	struct condition1ll *temp = malloc(sizeof(struct condition1ll));
+	temp->next = currentcondition1head;
+	currentcondition1head = temp;
+	temp->data = malloc(sizeof(struct condition1));
+	temp->data->type = COND1_NONE;
+	temp->data->cond2 = currentcondition2head->data;
+	currentcondition2head = currentcondition2head->next;
+	temp->data->cond1 = NULL;
+	ast_display_condll_stauts();
+}
+void ast_add_condition2_condition3(){
+	if(ASTVERBOSE())printf(":AST: Shifting condition3 element to condition2\n");
+	struct condition2ll *temp = malloc(sizeof(struct condition2ll));
+	temp->next = currentcondition2head;
+	currentcondition2head = temp;
+	temp->data = malloc(sizeof(struct condition2));
+	temp->data->type = COND2_NONE;
+	temp->data->cond3 = currentcondition3head->data;
+	currentcondition3head = currentcondition3head->next;
+	temp->data->cond2 = NULL;
+	ast_display_condll_stauts();
+}
+void ast_add_condition1_lor_condition2(){
+	if(ASTVERBOSE())printf(":AST: ORing condition2 element to condition1\n");
+	struct condition1 *temp = malloc(sizeof(struct condition1));
+	temp->type = COND1_LOR;
+	temp->cond1 = currentcondition1head->data;
+	currentcondition1head->data = temp;
+	temp->cond2 = currentcondition2head->data;
+	currentcondition2head = currentcondition2head->next;
+	ast_display_condll_stauts();
+}
+void ast_add_condition2_land_condition3(){
+	if(ASTVERBOSE())printf(":AST: ANDing condition3 element to condition2\n");
+	struct condition2 *temp = malloc(sizeof(struct condition2));
+	temp->type = COND2_LAND;
+	temp->cond2 = currentcondition2head->data;
+	currentcondition2head->data = temp;
+	temp->cond3 = currentcondition3head->data;
+	currentcondition3head = currentcondition3head->next;
+	ast_display_condll_stauts();
+}
+void ast_add_discrete_condition_comp(){
+	if(ASTVERBOSE())printf(":AST: Condition discrete formed: single component\n");
+	struct condition3ll *temp = malloc(sizeof(struct condition3ll));
+	temp->next = currentcondition3head;
+	currentcondition3head = temp;
+	temp->data = malloc(sizeof(struct condition3));
+	temp->data->type = COND3_COMP;
+	temp->data->component1 = currentconditioncomponenthead->data;
+	currentconditioncomponenthead = currentconditioncomponenthead->next;
+	temp->data->component2 = NULL;
+	temp->data->cond1 = NULL;
+	temp->data->neg = currentconditionnegationhead->neg;
+	currentconditionnegationhead = currentconditionnegationhead->next;
+	ast_display_condll_stauts();
+}
+void ast_add_discrete_condition_comp_rel_comp(){
+	if(ASTVERBOSE())printf(":AST: Condition discrete formed: component rel component\n");
+	struct condition3ll *temp = malloc(sizeof(struct condition3ll));
+	temp->next = currentcondition3head;
+	currentcondition3head = temp;
+	temp->data = malloc(sizeof(struct condition3));
+	temp->data->type = COND3_COMP_REL_COMP;
+	temp->data->component1 = currentconditioncomponenthead->data;
+	currentconditioncomponenthead = currentconditioncomponenthead->next;
+	temp->data->component2 = currentconditioncomponenthead->data;
+	currentconditioncomponenthead = currentconditioncomponenthead->next;
+	temp->data->cond1 = NULL;
+	temp->data->neg = NEG_NO;
+	temp->data->rel = currentreloprhead->rel;
+	currentreloprhead = currentreloprhead->next;
+	ast_display_condll_stauts();
+}
+void ast_add_discrete_condition_unarycondition(){
+	if(ASTVERBOSE())printf(":AST: Shifting condition1 to condtion3: discrete term unary+condition\n");
+	struct condition3ll *temp = malloc(sizeof(struct condition3ll));
+	temp->next = currentcondition3head;
+	currentcondition3head = temp;
+	temp->data = malloc(sizeof(struct condition3));
+	temp->data->type = COND3_COND;
+	temp->data->component1 = NULL;
+	temp->data->component2 = NULL;
+	temp->data->cond1 = currentcondition1head->data;
+	currentcondition1head = currentcondition1head->next;
+	if(currentconditionnegationhead){
+		temp->data->neg = currentconditionnegationhead->neg;
+		currentconditionnegationhead = currentconditionnegationhead->next;
+	}
+	else
+		temp->data->neg = NEG_NO;
+	ast_display_condll_stauts();
+}
+void ast_display_condll_stauts(){
+	if(ASTVERBOSE())printf(":AST: Current cond LL state: ");
+	int cnt = 0;
+	struct condition1ll *temp1 = currentcondition1head;
+	while(temp1!=NULL){
+		cnt++;
+		temp1 = temp1->next;
+	}
+	if(ASTVERBOSE())printf(" [cond1|%d] ",cnt);
+	cnt = 0;
+	struct condition2ll *temp2 = currentcondition2head;
+	while(temp2!=NULL){
+		cnt++;
+		temp2 = temp2->next;
+	}
+	if(ASTVERBOSE())printf(" [cond2|%d] ",cnt);
+	cnt = 0;
+	struct condition3ll *temp3 = currentcondition3head;
+	while(temp3!=NULL){
+		cnt++;
+		temp3 = temp3->next;
+	}
+	if(ASTVERBOSE())printf(" [cond3|%d] ",cnt);
+	cnt = 0;
+	struct conditioncomponentll *temp4 = currentconditioncomponenthead;
+	while(temp4!=NULL){
+		cnt++;
+		temp4 = temp4->next;
+	}
+	if(ASTVERBOSE())printf(" [condcomp|%d] ",cnt);
+	cnt = 0;
+	struct reloprll *temp5 = currentreloprhead;
+	while(temp5!=NULL){
+		cnt++;
+		temp5 = temp5->next;
+	}
+	if(ASTVERBOSE())printf(" [condrel|%d] ",cnt);
+	cnt = 0;
+	struct conditionnegationll *temp6 = currentconditionnegationhead;
+	while(temp6!=NULL){
+		cnt++;
+		temp6 = temp6->next;
+	}
+	if(ASTVERBOSE())printf(" [condneg|%d] ",cnt);
+	printf("\n");
+}
+void ast_add_expr3_discrete_term_shellecho(char *echo){
+	if(ASTVERBOSE())printf(":AST: Adding shellecho{%s} to discrete_term\n", echo);
+	struct expr_discrete_termll *temp = malloc(sizeof(struct expr_discrete_termll));
+	temp->next = currentexpression3discretermhead;
+	currentexpression3discretermhead = temp;
+	temp->data = malloc(sizeof(struct expr_discrete_term));
+	temp->data->type = DISCRETE_SHELLECHO;
+	temp->data->shellecho = malloc(sizeof(struct ast_sequential_shellecho));
+	temp->data->shellecho->value = malloc(sizeof(char)*(strlen(echo)+1));
+	strcpy(temp->data->shellecho->value, echo);
+	ast_display_exprll_status();
+}
+void ast_add_expr3_discrete_term_functioncall(char *functionname){
+	if(ASTVERBOSE())printf(":AST: Adding functioncall{%s} to discrete_term\n", functionname);
+	struct expr_discrete_termll *temp = malloc(sizeof(struct expr_discrete_termll));
+	temp->next = currentexpression3discretermhead;
+	currentexpression3discretermhead = temp;
+	temp->data = malloc(sizeof(struct expr_discrete_term));
+	temp->data->type = DISCRETE_FUNCTIONCALL;
+	temp->data->functioncalldata = malloc(sizeof(struct ast_sequential_functioncall));
+	temp->data->functioncalldata->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
+	temp->data->functioncalldata->args = currentfunccallargshead;
+	currentfunccallargshead = currentfunccallargshead->next;
 }

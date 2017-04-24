@@ -230,6 +230,85 @@ struct expr_successorll{
 	struct expr_successor *data;
 	struct expr_successorll *next;
 };
+enum condition1type{
+	COND1_NONE,
+	COND1_LOR
+};
+enum condition2type{
+	COND2_NONE,
+	COND2_LAND
+};
+enum condition3type{
+	COND3_COND,
+	COND3_COMP,
+	COND3_COMP_REL_COMP
+};
+enum conditioncomponenttype{
+	COMP_FUNC,
+	COMP_SHELLECHO,
+	COMP_VARNAME,
+	COMP_STR
+};
+enum negation{
+	NEG_YES,
+	NEG_NO
+};
+enum relopr{
+	REL_EQ,
+	REL_NQ,
+	REL_LT,
+	REL_GT,
+	REL_LE,
+	REL_GE
+};
+struct condition1{
+	enum condition1type type;
+	struct condition1 *cond1;
+	struct condition2 *cond2;
+};
+struct condition2{
+	enum condition2type type;
+	struct condition2 *cond2;
+	struct condition3 *cond3;
+};
+struct condition3{
+	enum negation neg;
+	enum condition3type type;
+	struct condition1 *cond1;
+	struct conditioncomponent *component1, *component2;
+	enum relopr rel;
+};
+struct conditioncomponent{
+	struct ast_sequential_functioncall *func;
+	struct ast_sequential_shellecho *shellecho;
+	char *name;
+	enum conditioncomponenttype type;
+};
+
+struct condition1ll{
+	struct condition1 *data;
+	struct condition1ll *next;
+};
+struct condition2ll{
+	struct condition2 *data;
+	struct condition2ll *next;
+};
+struct condition3ll{
+	struct condition3 *data;
+	struct condition3ll *next;
+};
+struct conditioncomponentll{
+	struct conditioncomponent *data;
+	struct conditioncomponentll *next;
+};
+struct reloprll{
+	enum relopr rel;
+	struct reloprll *next;
+};
+struct conditionnegationll{
+	enum negation neg;
+	struct conditionnegationll *next;
+};
 
 struct ast_root_node *rootnode;
 struct ast_construct *currentconstructhead;
@@ -246,6 +325,12 @@ struct expr_discrete_termll *currentexpression3discretermhead;
 struct expr_unary_precederll *currentexpression3unaryprecederhead;
 struct expr_successorll *currentexpression3successorhead;
 struct var_assignments *currentvarassignmentshead;
+struct condition1ll *currentcondition1head;
+struct condition2ll *currentcondition2head;
+struct condition3ll *currentcondition3head;
+struct conditioncomponentll *currentconditioncomponenthead;
+struct reloprll *currentreloprhead;
+struct conditionnegationll *currentconditionnegationhead;
 
 int ast_init();
 void ast_add_function(char *functionname);
@@ -265,6 +350,8 @@ void ast_make_vardecl_assignment(char *varname, char *value);
 void ast_make_vardecl_assignment_defaultval(char *varname);
 void ast_add_arguments_string(char *argstr);
 void ast_add_arguments_varname(char *argstr);
+void ast_add_arguments_shellecho(char *echo);
+void ast_add_arguments_functioncall(char *functionname);
 void ast_add_seq_functioncall(char *functionname);
 void ast_set_returnval_expression();
 void ast_add_seq_return();
@@ -286,3 +373,19 @@ void ast_add_varassignment_expr(char *varname);
 void ast_add_varassignment_keyvalpairs(char *varname);
 void ast_add_varassignmenttype(char *varname, enum var_assignmenttype type);
 void ast_add_seq_varassignment();
+void ast_add_condition_relopr(enum relopr rel);
+void ast_add_condition_unary(enum negation neg);
+void ast_add_condition_component_string(char *str);
+void ast_add_condition_component_varname(char *varname);
+void ast_add_condition_component_functioncall(char *funcname);
+void ast_add_condition_component_shellecho(char *echo);
+void ast_add_discrete_condition_comp();
+void ast_add_discrete_condition_comp_rel_comp();
+void ast_add_discrete_condition_unarycondition();
+void ast_add_condition1_condition2();
+void ast_add_condition2_condition3();
+void ast_add_condition1_lor_condition2();
+void ast_add_condition2_land_condition3();
+void ast_display_condll_stauts();
+void ast_add_expr3_discrete_term_functioncall(char *functionname);
+void ast_add_expr3_discrete_term_shellecho(char *echo);
