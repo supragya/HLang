@@ -1,6 +1,7 @@
 #!/script/HLang
 
 function main{
-	$t = 90+20+$num;
+	declare map $root = {"o", "tt"};
+	$xy = 900 +($3+80);
 }
 function foo{}

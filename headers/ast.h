@@ -37,7 +37,8 @@ enum functioncallargtype{
 enum returntype{
 	R_STRING,
 	R_VARNAME,
-	R_FUNCTIONCALL
+	R_FUNCTIONCALL,
+	R_EXPRESSION
 };
 
 union ast_nextconstruct_ptr{
@@ -95,9 +96,25 @@ struct ast_sequential_return{
 struct returnval{
 	enum returntype type;
 	char *ret_str;
+	struct expr_expression *expr;
 };
 struct ast_sequential_varassignment{
 	struct var_assignments *assignments;
+};
+enum var_assignmenttype{
+	ASSIGN_EXPRESSION,
+	ASSIGN_KEYVALPAIRS,
+	ASSIGN_PREINCR,
+	ASSIGN_POSTINCR,
+	ASSIGN_PREDECR,
+	ASSIGN_POSTDECR
+};
+struct var_assignments{
+	char *varname;
+	enum var_assignmenttype type;
+	struct keyvalpairs *keyvalpairs;
+	struct expr_expression *expression;
+
 };
 
 struct ast_construct{
@@ -107,7 +124,6 @@ struct ast_construct{
 };
 
 struct ast_sequentialnode{
-	char *name;
 	enum ast_selectiveconstructtype childtype;
 	union ast_sequential_code_ptr child;
 };
@@ -154,7 +170,7 @@ struct expr_expression3{
 	enum expr_expression3_type type;
 	struct expr_unary_preceder *unprec;
 	struct expr_successor *succ;
-	struct expr_expression1 *expr;
+	struct expr_expression *expr;
 	struct expr_discrete_term *disc_term;
 	char *value;
 };
@@ -175,7 +191,7 @@ enum expr_unary_preceder_type{
 	UNARY_NEG
 };
 struct expr_unary_preceder{
-	enum expr_unary_preceder_type precedortype;
+	enum expr_unary_preceder_type precedertype;
 };
 enum expr_successor_type{
 	FACTORIAL,
@@ -189,7 +205,7 @@ struct expr_successor{
 };
 
 struct expr_expression1ll{
-	struct expr_expression1 *data;
+	struct expr_expression *data;
 	struct expr_expression1ll *next;
 };
 struct expr_expression2ll{
@@ -198,8 +214,8 @@ struct expr_expression2ll{
 
 };
 struct expr_expression3ll{
-	struct expr_expression2 *data;
-	struct expr_expression2ll *next;
+	struct expr_expression3 *data;
+	struct expr_expression3ll *next;
 
 };
 struct expr_discrete_termll{
@@ -229,11 +245,11 @@ struct expr_expression3ll *currentexpression3head;
 struct expr_discrete_termll *currentexpression3discretermhead;
 struct expr_unary_precederll *currentexpression3unaryprecederhead;
 struct expr_successorll *currentexpression3successorhead;
-
+struct var_assignments *currentvarassignmentshead;
 
 int ast_init();
 void ast_add_function(char *functionname);
-void ast_add_seq(char *name);
+void ast_add_seq();
 void ast_add_sel(char *name);
 void ast_add_iter(char *name);
 void ast_walk_constructs(struct ast_construct *head);
@@ -250,10 +266,23 @@ void ast_make_vardecl_assignment_defaultval(char *varname);
 void ast_add_arguments_string(char *argstr);
 void ast_add_arguments_varname(char *argstr);
 void ast_add_seq_functioncall(char *functionname);
-void ast_set_return_val_varname(char *varname);
+void ast_set_returnval_expression();
 void ast_add_seq_return();
 void ast_add_expr3_discrete_term_string(char *str);
 void ast_add_expr3_discrete_term_variable(char *varname);
 void ast_add_expr3_discrete_term_functioncall();
 void ast_add_expr3_discrete_term_shellecho(char *shellecho);
 void ast_display_expr3_discrete_termll_status();
+void ast_add_expr3_unprecdiscrsucc();
+void ast_add_expr3_unprec(enum expr_unary_preceder_type type);
+void ast_display_expr3_unary_precll_status();
+void ast_display_exprll_status();
+void ast_add_expr_expr2();
+void ast_add_expr_op_expr2(enum expr_expression1_operation op);
+void ast_add_expr2_expr3();
+void ast_add_expr2_op_expr3(enum expr_expression2_operation op);
+void ast_add_expr3_unprecexprsucc();
+void ast_add_varassignment_expr(char *varname);
+void ast_add_varassignment_keyvalpairs(char *varname);
+void ast_add_varassignmenttype(char *varname, enum var_assignmenttype type);
+void ast_add_seq_varassignment();

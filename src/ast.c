@@ -25,6 +25,7 @@ int ast_init(){
 	currentexpression3discretermhead = NULL;
 	currentexpression3unaryprecederhead = NULL;
 	currentexpression3successorhead = NULL;
+	currentvarassignmentshead = NULL;
 	return 0;
 }
 
@@ -50,28 +51,26 @@ void ast_add_function(char *functionname){
 	if(ASTVERBOSE())printf("\n");
 }
 
-void ast_add_seq(char *name){
+void ast_add_seq(){
 	struct ast_sequentialnode *newseqnode;
 	newseqnode = malloc(sizeof(struct ast_sequentialnode));
-	newseqnode->name = malloc(sizeof(char)*(strlen(name)+1));
-	strcpy(newseqnode->name, name);
 	//newseqnode->next.ctype = NONE;
 	if(currentsequentialhead != NULL){
 		newseqnode->childtype = currentsequentialhead->childtype;
 		switch(newseqnode->childtype){
-			case AST_GENVARDECL: newseqnode->name[0] = 'g'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----GENVARDECL\n");newseqnode->child.genvardecl = currentsequentialhead->child.genvardecl; break;
-			case AST_MAPVARDECL: newseqnode->name[0] = 'm'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----MAPVARDECL\n");newseqnode->child.mapvardecl = currentsequentialhead->child.mapvardecl; break;
-			case AST_ASSIGNMENTS: newseqnode->name[0] = 'a'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----ASSIGNMENTS\n");newseqnode->child.assignments = currentsequentialhead->child.assignments; break;
-			case AST_RETURN: newseqnode->name[0] = 'r'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----RETURN\n");newseqnode->child._return = currentsequentialhead->child._return; break;
-			case AST_SHELLECHO: newseqnode->name[0] = 's'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----SHELLECHO\n");newseqnode->child.shellecho = currentsequentialhead->child.shellecho; break;
-			case AST_FUNCTIONCALL: newseqnode->name[0] = 'f'; if(ASTVERBOSE())printf(":AST: Registering sequential construct SEQ----FUNCTIONCALL\n");newseqnode->child.functioncall = currentsequentialhead->child.functioncall; break;
+			case AST_GENVARDECL: if(ASTVERBOSE())printf(":AST: Registering sequential construct GENVARDECL\n");newseqnode->child.genvardecl = currentsequentialhead->child.genvardecl; break;
+			case AST_MAPVARDECL: if(ASTVERBOSE())printf(":AST: Registering sequential construct MAPVARDECL\n");newseqnode->child.mapvardecl = currentsequentialhead->child.mapvardecl; break;
+			case AST_ASSIGNMENTS: if(ASTVERBOSE())printf(":AST: Registering sequential construct ASSIGNMENTS\n");newseqnode->child.assignments = currentsequentialhead->child.assignments; break;
+			case AST_RETURN: if(ASTVERBOSE())printf(":AST: Registering sequential construct RETURN\n");newseqnode->child._return = currentsequentialhead->child._return; break;
+			case AST_SHELLECHO: if(ASTVERBOSE())printf(":AST: Registering sequential construct SHELLECHO\n");newseqnode->child.shellecho = currentsequentialhead->child.shellecho; break;
+			case AST_FUNCTIONCALL: if(ASTVERBOSE())printf(":AST: Registering sequential construct FUNCTIONCALL\n");newseqnode->child.functioncall = currentsequentialhead->child.functioncall; break;
 		}
 		free(currentsequentialhead);
 		currentsequentialhead = NULL;
 		// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
 		// if(ASTVERBOSE())printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
 	}
-	if(ASTVERBOSE())printf(":AST: newseqnode with name %s\n", newseqnode->name);
+	if(ASTVERBOSE())printf(":AST: newseqnode made\n");
 	if(currentconstructhead == NULL){
 		if(ASTVERBOSE())printf(":AST: currentconstructhead is empty at this point, allocating memory\n");
 		currentconstructhead = malloc(sizeof(struct ast_construct));
@@ -309,7 +308,6 @@ void ast_add_arguments_varname(char *argstr){
 	}
 	if(ASTVERBOSE())printf("\n");
 }
-
 void ast_add_seq_functioncall(char *functionname){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_FUNCTIONCALL;
@@ -320,16 +318,14 @@ void ast_add_seq_functioncall(char *functionname){
 	currentfunccallargshead = NULL;
 	if(ASTVERBOSE())printf(":AST: Found a functioncall to {%s}\n", currentsequentialhead->child.functioncall->functionname);
 }
-
-void ast_set_return_val_varname(char *varname){
-	//TODO
+void ast_set_returnval_expression(){
 	currentreturnvalhead = malloc(sizeof(struct returnval));
-	currentreturnvalhead->type = R_VARNAME;
-	currentreturnvalhead->ret_str = malloc(sizeof(char)*(strlen(varname)+1));
-	strcpy(currentreturnvalhead->ret_str, varname);
-	if(ASTVERBOSE())printf(":AST: Set the return value to varname %s\n", varname);
+	currentreturnvalhead->type = R_EXPRESSION;
+	currentreturnvalhead->expr = currentexpression1head->data;
+	currentexpression1head = currentexpression1head->next;
+	if(ASTVERBOSE())printf(":AST: Setting the return value to expression\n");
+	ast_display_exprll_status();
 }
-
 void ast_add_seq_return(){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_RETURN;
@@ -337,7 +333,6 @@ void ast_add_seq_return(){
 	currentsequentialhead->child._return->retdata = currentreturnvalhead;
 	currentreturnvalhead = NULL;
 }
-
 void ast_add_expr3_discrete_term_string(char *str){
 	if(ASTVERBOSE())printf(":AST: Adding expression 3 discrete term to the expression with string %s\n", str);
 	struct expr_discrete_termll *tempterm = malloc(sizeof(struct expr_discrete_termll));
@@ -361,12 +356,23 @@ void ast_add_expr3_discrete_term_variable(char *varname){
 	ast_display_expr3_discrete_termll_status();
 }
 void ast_add_expr3_discrete_term_functioncall(){
-
 }
 void ast_add_expr3_discrete_term_shellecho(char *shellecho){
-
 }
+void ast_add_expr3_unprec(enum expr_unary_preceder_type type){
+	if(ASTVERBOSE())printf(":AST: Adding expression 3 unary precedor type: ");
+	switch(type){
+		case UNARY_NEG: if(ASTVERBOSE())printf(" UNARY_NEG \n"); break;
+		case UNARY_POS: if(ASTVERBOSE())printf(" UNARY POS \n"); break;
+	}
 
+	struct expr_unary_precederll *temp = malloc(sizeof(struct expr_unary_precederll));
+	temp->next = currentexpression3unaryprecederhead;
+	currentexpression3unaryprecederhead = temp;
+	temp->data = malloc(sizeof(struct expr_unary_preceder));
+	temp->data->precedertype = type;
+	//ast_display_expr3_unary_precll_status();
+}
 void ast_display_expr3_discrete_termll_status(){
 	if(ASTVERBOSE())printf(":AST: Current expression3 discrete term LL state: ");
 	struct expr_discrete_termll *tempterm = currentexpression3discretermhead;
@@ -378,4 +384,196 @@ void ast_display_expr3_discrete_termll_status(){
 		tempterm = tempterm->next;
 	}
 	printf("\n");
+}
+void ast_display_expr3_unary_precll_status(){
+	if(ASTVERBOSE())printf(":AST: Current expression3 unary prec LL state: ");
+	struct expr_unary_precederll *temp = currentexpression3unaryprecederhead;
+	while(temp != NULL){
+		switch(temp->data->precedertype){
+			case UNARY_NEG: if(ASTVERBOSE())printf(" UNARY_NEG "); break;
+			case UNARY_POS: if(ASTVERBOSE())printf(" UNARY POS "); break;
+		}
+		temp = temp->next;
+	}
+	if(ASTVERBOSE())printf("\n");
+}
+void ast_add_expr3_unprecdiscrsucc(){
+	if(ASTVERBOSE())printf(":AST: Combining for expression 3 using format UNPREC DISCR SUCC  ");
+	struct expr_expression3ll *temp = malloc(sizeof(struct expr_expression3ll));
+	temp->next = currentexpression3head;
+	currentexpression3head = temp;
+	temp->data = malloc(sizeof(struct expr_expression3));
+	temp->data->type = UNPREC_DISCR_SUCC;
+	temp->data->unprec = currentexpression3unaryprecederhead==NULL?NULL:currentexpression3unaryprecederhead->data;
+	if(currentexpression3unaryprecederhead)
+		currentexpression3unaryprecederhead = currentexpression3unaryprecederhead->next;
+	temp->data->succ = currentexpression3successorhead==NULL?NULL:currentexpression3successorhead->data;
+	if(currentexpression3successorhead)
+		currentexpression3successorhead = currentexpression3successorhead->next;
+	temp->data->disc_term = currentexpression3discretermhead->data;
+	if(currentexpression3discretermhead)
+		currentexpression3discretermhead = currentexpression3discretermhead->next;
+	if(ASTVERBOSE())printf("{");
+	if(temp->data->unprec != NULL){
+		switch(temp->data->unprec->precedertype){
+			case UNARY_NEG: if(ASTVERBOSE())printf("UNARY_NEG|"); break;
+			case UNARY_POS: if(ASTVERBOSE())printf("UNARY POS|"); break;
+		}
+	}
+	else{
+		if(ASTVERBOSE())printf("(null)|");
+	}
+	switch (temp->data->disc_term->type) {
+		case DISCRETE_STRING: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
+		case DISCRETE_VARIABLE: if(ASTVERBOSE())printf("variable = %s|", temp->data->disc_term->termdata); break;
+		//case DISCRETE_FUNCTIONCALL: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
+		//case DISCRETE_SHELLECHO: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
+	}
+	printf("|(null)}\n");
+	//ast_display_expr3_discrete_termll_status();
+	//ast_display_expr3_unary_precll_status();
+	ast_display_exprll_status();
+}
+void ast_display_exprll_status(){
+	if(ASTVERBOSE())printf(":AST: Current expression LL state: ");
+	int cnt = 0;
+	struct expr_expression1ll *temp1 = currentexpression1head;
+	struct expr_expression2ll *temp2 = currentexpression2head;
+	struct expr_expression3ll *temp3 = currentexpression3head;
+	while(temp1 != NULL){
+		cnt++;
+		temp1 = temp1->next;
+	}
+	if(ASTVERBOSE())printf("[expr1 %d] ", cnt);
+	cnt = 0;
+	while(temp2 != NULL){
+		cnt++;
+		temp2 = temp2->next;
+	}
+	if(ASTVERBOSE())printf("[expr2 %d] ", cnt);
+	cnt =0;
+	while(temp3 != NULL){
+		cnt++;
+		temp3 = temp3->next;
+	}
+	if(ASTVERBOSE())printf("[expr3 %d] \n", cnt);
+}
+void ast_add_expr_expr2(){
+	if(ASTVERBOSE())printf(":AST: expression2 shifted to expression1\n");
+	struct expr_expression1ll *temp = malloc(sizeof(struct expr_expression1ll));
+	temp->next = currentexpression1head;
+	currentexpression1head = temp;
+	temp->data = malloc(sizeof(struct expr_expression));
+	temp->data->op = OP_NONE_EXPR1;
+	temp->data->expression1 = NULL;
+	temp->data->expression2 = currentexpression2head->data;
+	currentexpression2head = currentexpression2head->next;
+	ast_display_exprll_status();
+}
+void ast_add_expr2_expr3(){
+	if(ASTVERBOSE())printf(":AST: expression3 shifted to expression2\n");
+	struct expr_expression2ll *temp = malloc(sizeof(struct expr_expression2ll));
+	temp->next = currentexpression2head;
+	currentexpression2head = temp;
+	temp->data = malloc(sizeof(struct expr_expression2));
+	temp->data->op = OP_NONE_EXPR2;
+	temp->data->expression2 = NULL;
+	temp->data->expression3 = currentexpression3head->data;
+	currentexpression3head = currentexpression3head->next;
+
+	ast_display_exprll_status();
+}
+void ast_add_expr_op_expr2(enum expr_expression1_operation op){
+	if(ASTVERBOSE())printf(":AST: expression2 shifted to expression1 with op ");
+	switch(op){
+		case OP_ADD: if(ASTVERBOSE())printf("OP_ADD\n"); break;
+		case OP_SUB: if(ASTVERBOSE())printf("OP_SUB\n"); break;
+	}
+	struct expr_expression *temp = malloc(sizeof(struct expr_expression));
+	temp->op = op;
+	temp->expression1 = currentexpression1head->data;
+	currentexpression1head->data = temp;
+	temp->expression2 = currentexpression2head->data;
+	currentexpression2head = currentexpression2head->next;
+	ast_display_exprll_status();
+}
+void ast_add_expr2_op_expr3(enum expr_expression2_operation op){
+	if(ASTVERBOSE())printf(":AST: expression3 shifted to expression2 with op ");
+	switch(op){
+		case OP_MUL: if(ASTVERBOSE())printf("OP_MUL\n"); break;
+		case OP_DIV: if(ASTVERBOSE())printf("OP_DIV\n"); break;
+		case OP_TRUNCDIV: if(ASTVERBOSE())printf("OP_TRUNCDIV\n"); break;
+	}
+	struct expr_expression2 *temp = malloc(sizeof(struct expr_expression2));
+	temp->op = op;
+	temp->expression2 = currentexpression2head->data;
+	currentexpression2head->data = temp;
+	temp->expression3 = currentexpression3head->data;
+	currentexpression3head = currentexpression3head->next;
+	ast_display_exprll_status();
+}
+void ast_add_expr3_unprecexprsucc(){
+	if(ASTVERBOSE())printf(":AST: Combining for expression 3 using format UNPREC EXPR SUCC\n");
+	struct expr_expression3ll *temp = malloc(sizeof(struct expr_expression3ll));
+	temp->next = currentexpression3head;
+	currentexpression3head = temp;
+	temp->data = malloc(sizeof(struct expr_expression3));
+	temp->data->disc_term = NULL;
+	temp->data->expr = currentexpression1head->data;
+	currentexpression1head = currentexpression1head->next;
+	temp->data->unprec = currentexpression3unaryprecederhead->data;
+	currentexpression3unaryprecederhead = currentexpression3unaryprecederhead->next;
+	temp->data->succ = currentexpression3successorhead==NULL?NULL:currentexpression3successorhead->data;
+	if(currentexpression3successorhead)
+		currentexpression3successorhead = currentexpression3successorhead->next;
+	temp->data->type = UNPREC_EXPR_SUCC;
+	ast_display_exprll_status();
+}
+void ast_add_varassignmenttype(char *varname, enum var_assignmenttype type){
+	if(ASTVERBOSE())printf(":AST: Variable assignment type for {%s} : ", varname);
+	switch (type) {
+		case ASSIGN_PREINCR: if(ASTVERBOSE())printf(" PRE-INCREMENT\n"); break;
+		case ASSIGN_POSTINCR: if(ASTVERBOSE())printf(" POST-INCREMENT\n"); break;
+		case ASSIGN_PREDECR: if(ASTVERBOSE())printf(" PRE-DECREMENT\n"); break;
+		case ASSIGN_POSTDECR: if(ASTVERBOSE())printf(" POST-DECREMENT\n"); break;
+	}
+	struct var_assignments *temp = malloc(sizeof(struct var_assignments));
+	currentvarassignmentshead = temp;
+	temp->type = type;
+	temp->varname = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(temp->varname, varname);
+	temp->expression = NULL;
+	temp->keyvalpairs = NULL;
+	ast_display_exprll_status();
+}
+void ast_add_varassignment_keyvalpairs(char *varname){
+	if(ASTVERBOSE())printf(":AST: Variable assignment type for {%s} : ASSIGN_KEYVALPAIRS\n", varname);
+	struct var_assignments *temp = malloc(sizeof(struct var_assignments));
+	currentvarassignmentshead = temp;
+	temp->keyvalpairs = currentkeyvalpairshead;
+	currentkeyvalpairshead = NULL;
+	temp->type = ASSIGN_KEYVALPAIRS;
+	temp->expression = NULL;
+	temp->varname = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(temp->varname, varname);
+}
+void ast_add_varassignment_expr(char *varname){
+	if(ASTVERBOSE())printf(":AST: Variable assignment type for {%s} : ASSIGN_EXPRESSION\n", varname);
+	struct var_assignments *temp = malloc(sizeof(struct var_assignments));
+	currentvarassignmentshead = temp;
+	temp->type = ASSIGN_EXPRESSION;
+	temp->expression = currentexpression1head->data;
+	currentexpression1head = currentexpression1head->next;
+	temp->varname = malloc(sizeof(char)*(strlen(varname)+1));
+	strcpy(temp->varname, varname);
+	ast_display_exprll_status();
+}
+void ast_add_seq_varassignment(){
+	struct ast_sequential_varassignment *temp = malloc(sizeof(struct ast_sequential_varassignment));
+	temp->assignments = currentvarassignmentshead;
+	currentvarassignmentshead = NULL;
+	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
+	currentsequentialhead->childtype = AST_ASSIGNMENTS;
+	currentsequentialhead->child.assignments = temp;
+	if(ASTVERBOSE())printf(":AST: Added variable assignment statement\n");
 }

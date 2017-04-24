@@ -9,6 +9,7 @@
 #include "ast.h"
 #include "verbose.h"
 #include "executor.h"
+#include "shell.h"
 
 int flagerror = 0;
 
@@ -75,6 +76,7 @@ int exec_sequential_construct(struct ast_sequentialnode *seq){
 		case AST_RETURN:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_RETURN\n");
 					break;
 		case AST_SHELLECHO:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_SHELLECHO\n");
+					return exec_shellecho(seq->child.shellecho);
 					break;
 		case AST_FUNCTIONCALL:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_FUNCTIONCALL\n");
 					break;
@@ -147,4 +149,8 @@ int exec_add_keyval_pairs(char *mapname, struct keyvalpairs *pairs){
 		vms_assign_to_bin_location(currentbinloc, pairs->value);
 		pairs = pairs->next;
 	}
+}
+
+int exec_shellecho(struct ast_sequential_shellecho *node){
+	return shellexecute(node->value);
 }

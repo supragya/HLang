@@ -58,7 +58,7 @@ sequential_constuct:
 	|generalvariables_declaration EOS		{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: GEN VARIABLE DECLARATIONS>\n"); ast_add_seq_vardecl();}
 	|SHELLECHO EOS					{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: SHELL ECHO>\n"); ast_add_seq_shellecho($1);}
 	|functioncall EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: FUNCTIONCALL>\n"); ast_add_seq_functioncall($1);}
-	|assignments EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: VARIABLE ASSIGNMENT>\n");}
+	|assignments EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: VARIABLE ASSIGNMENT>\n"); ast_add_seq_varassignment();}
 	|return_statement EOS				{if(PARSERVERBOSE())printf("\t<SEQUENTIAL CONSTRUCT: RETURN STATEMENT>\n"); ast_add_seq_return();}
 	;
 
@@ -142,11 +142,13 @@ gen_discrete_variable:
 
 /* Variable assignment sequential constructs */
 assignments:
-	VARNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: VARNAME ASSIGN EXPRESSION>\n");}
-	|MELNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: MELNAME ASSIGN EXPRESSION>\n");}
-	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: VARNAME ASSIGN KEYVALPAIRS>\n");}
-	|unaryop assignmentvar				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: PRE OPERATION>\n");}
-	|assignmentvar unaryop				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: POST OPERATION>\n");}
+	VARNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: VARNAME ASSIGN EXPRESSION>\n"); ast_add_varassignment_expr($1);}
+	|MELNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: MELNAME ASSIGN EXPRESSION>\n"); ast_add_varassignment_expr($1);}
+	|VARNAME ASSIGN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: VARNAME ASSIGN KEYVALPAIRS>\n"); ast_add_varassignment_keyvalpairs($1);}
+	|DECR assignmentvar				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: PRE OPERATION DECR>\n"); ast_add_varassignmenttype($2,ASSIGN_PREDECR);}
+	|INCR assignmentvar				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: PRE OPERATION INCR>\n"); ast_add_varassignmenttype($2,ASSIGN_PREINCR);}
+	|assignmentvar DECR				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: POST OPERATION DECR>\n"); ast_add_varassignmenttype($1,ASSIGN_POSTDECR);}
+	|assignmentvar INCR				{if(PARSERVERBOSE())printf("\t<ASSIGNMENT: POST OPERATION INCR>\n"); ast_add_varassignmenttype($1,ASSIGN_POSTINCR);}
 	;
 
 assignmentvar:
@@ -154,37 +156,31 @@ assignmentvar:
 	|MELNAME					{if(PARSERVERBOSE())printf("\t<ASSIGNMENTVAR: MELNAME>\n");}
 	;
 
-unaryop:
-	DECR						{if(PARSERVERBOSE())printf("\t<ASSIGNMENTVAR: DECREMENT>\n");}
-	|INCR						{if(PARSERVERBOSE())printf("\t<ASSIGNMENTVAR: INCREMENT>\n");}
-	;
-
-
 
 /* Arithmetic and otherwise */
 
 expression:
-	expression2						{if(PARSERVERBOSE())printf("\t<EXPRESSION: EXPRESSION2>\n");}
-	|expression ADD expression2				{if(PARSERVERBOSE())printf("\t<EXPRESSION: ADD EXPRESSION2>\n");}
-	|expression SUB expression2				{if(PARSERVERBOSE())printf("\t<EXPRESSION: SUB EXPRESSION2>\n");}
+	expression2						{if(PARSERVERBOSE())printf("\t<EXPRESSION: EXPRESSION2>\n"); ast_add_expr_expr2();}
+	|expression ADD expression2				{if(PARSERVERBOSE())printf("\t<EXPRESSION: ADD EXPRESSION2>\n"); ast_add_expr_op_expr2(OP_ADD);}
+	|expression SUB expression2				{if(PARSERVERBOSE())printf("\t<EXPRESSION: SUB EXPRESSION2>\n"); ast_add_expr_op_expr2(OP_SUB);}
 	;
 
 expression2:
-	expression3						{if(PARSERVERBOSE())printf("\t<EXPRESSION2: EXPRESSION3>\n");}
-	|expression2 MUL expression3				{if(PARSERVERBOSE())printf("\t<EXPRESSION2: MUL EXPRESSION3>\n");}
-	|expression2 DIV expression3				{if(PARSERVERBOSE())printf("\t<EXPRESSION2: DIV EXPRESSION3>\n");}
-	|expression2 TRUNCDIV expression3			{if(PARSERVERBOSE())printf("\t<EXPRESSION2: TRUNCDIV EXPRESSION3>\n");}
+	expression3						{if(PARSERVERBOSE())printf("\t<EXPRESSION2: EXPRESSION3>\n"); ast_add_expr2_expr3();}
+	|expression2 MUL expression3				{if(PARSERVERBOSE())printf("\t<EXPRESSION2: MUL EXPRESSION3>\n"); ast_add_expr2_op_expr3(OP_MUL);}
+	|expression2 DIV expression3				{if(PARSERVERBOSE())printf("\t<EXPRESSION2: DIV EXPRESSION3>\n"); ast_add_expr2_op_expr3(OP_DIV);}
+	|expression2 TRUNCDIV expression3			{if(PARSERVERBOSE())printf("\t<EXPRESSION2: TRUNCDIV EXPRESSION3>\n"); ast_add_expr2_op_expr3(OP_TRUNCDIV);}
 	;
 
 expression3:
-	expr_unary_preceder PARANOPEN expression PARANCLOSE expr_successor	{$$ = $3; if(PARSERVERBOSE())printf("\t<EXPRESSION3: UNARYPREC EXPRESSION EXPRSUCC>\n");}
-	|expr_unary_preceder discrete_term expr_successor	{$$ = $2; if(PARSERVERBOSE())printf("\t<EXPRESSION3: UNARYPREC TERM EXPRSUCC>\n");}
+	expr_unary_preceder PARANOPEN expression PARANCLOSE expr_successor	{$$ = $3; if(PARSERVERBOSE())printf("\t<EXPRESSION3: UNARYPREC EXPRESSION EXPRSUCC>\n"); ast_add_expr3_unprecexprsucc();}
+	|expr_unary_preceder discrete_term expr_successor	{$$ =$2; if(PARSERVERBOSE())printf("\t<EXPRESSION3: UNARYPREC TERM EXPRSUCC>\n"); ast_add_expr3_unprecdiscrsucc();}
 	;
 
 expr_unary_preceder:
-	%empty							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: NONE>\n");}
-	|SUB							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: NEGATIVE>\n");}
-	|ADD							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: POSITIVE>\n");}
+	%empty							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: NONE>\n"); ast_add_expr3_unprec(UNARY_POS);}
+	|SUB							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: NEGATIVE>\n"); ast_add_expr3_unprec(UNARY_NEG);}
+	|ADD							{if(PARSERVERBOSE())printf("\t<EXPR UNARY PREC: POSITIVE>\n"); ast_add_expr3_unprec(UNARY_POS);}
 	;
 
 expr_successor:
@@ -219,7 +215,8 @@ conditions_and_only:
 
 discrete_condition:
 	unary_condition_opr PARANOPEN conditions PARANCLOSE	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: UNARY PARAN CONDITION>\n");}
-	|conditioncomponent relopr conditioncomponent	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: BASIC CONDITION>\n");}
+	|conditioncomponent relopr conditioncomponent	{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP REL CONDITIONCOMP>\n");}
+	|conditioncomponent				{if(PARSERVERBOSE())printf("\t<DISCRETE CONDITION: CONDITIONCOMP>\n");}
 	;
 
 unary_condition_opr:
@@ -268,7 +265,7 @@ discrete_argument:
 /* Return statement */
 return_statement:
 	RETURN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<RETURN KEYVALPAIRS>\n");}
-	|RETURN expression			{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n"); ast_set_return_val_varname("dota");}
+	|RETURN expression			{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n"); ast_set_returnval_expression();}
 	;
 
 
