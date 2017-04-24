@@ -66,3 +66,4 @@ void vms_decommission_scope(unsigned int scope);
 int vms_is_mapname_exists(char *mapname, unsigned int scope);
 int vms_is_maptype(char *varname);
 char *vms_map_part(char *mapelement);
+char *vms_getvaluebylocation(variable_ptr_t binlocation);

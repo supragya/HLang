@@ -132,10 +132,10 @@ gen_variablelist:
 	;
 
 gen_discrete_variable:
-	VARNAME						{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: VARNAME| New variable %s>\n", $1); ast_make_vardecl_assignment($1, "1");}
-	|VARNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION| New variable %s with value %s>\n", $1, $3);ast_make_vardecl_assignment($1, "2");}
-	|MELNAME					{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: MELNAME| New mapelement %s>\n", $1); ast_make_vardecl_assignment($1, "3");}
-	|MELNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION| New element %s with val %s>\n",$1, $3); ast_make_vardecl_assignment($1, "4");}
+	VARNAME						{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: VARNAME| New variable %s>\n", $1); ast_make_vardecl_assignment($1, "0");}
+	|VARNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: VARNAME ASSIGN EXPRESSION| New variable %s with value %s>\n", $1, $3);ast_make_vardecl_assignment($1, "1");}
+	|MELNAME					{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: MELNAME| New mapelement %s>\n", $1); ast_make_vardecl_assignment($1, "0");}
+	|MELNAME ASSIGN expression			{if(PARSERVERBOSE())printf("\t<GEN DISCRETE VARIABLE: MELNAME ASSIGN EXPRESSION| New element %s with val %s>\n",$1, $3); ast_make_vardecl_assignment($1, "1");}
 	;
 
 
@@ -249,8 +249,8 @@ functioncall:
 
 funccallargs:
 	%empty						{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: NONE>\n");}
-	|discrete_argument				{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: DISCRETE ARGUMENT>\n");}
-	|funccallargs COMMA discrete_argument		{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: COMMA DISCRETE ARGUMENT>\n");}
+	|discrete_argument				{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: DISCRETE ARGUMENT>\n"); ast_add_argument_to_llhead();}
+	|funccallargs COMMA discrete_argument		{if(PARSERVERBOSE())printf("\t<FUNCTION CALL ARGUMENTS: COMMA DISCRETE ARGUMENT>\n"); ast_add_argument_to_llnode();}
 	;
 
 discrete_argument:
@@ -265,8 +265,8 @@ discrete_argument:
 
 /* Return statement */
 return_statement:
-	RETURN BROPEN keyvalpairs BRCLOSE	{if(PARSERVERBOSE())printf("\t<RETURN KEYVALPAIRS>\n");}
-	|RETURN expression			{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n"); ast_set_returnval_expression();}
+	RETURN BROPEN keyvalpairs BRCLOSE		{if(PARSERVERBOSE())printf("\t<RETURN KEYVALPAIRS>\n");}
+	|RETURN expression				{if(PARSERVERBOSE())printf("\t<RETURN EXPRESSION>\n"); ast_set_returnval_expression();}
 	;
 
 

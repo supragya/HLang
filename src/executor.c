@@ -72,6 +72,7 @@ int exec_sequential_construct(struct ast_sequentialnode *seq){
 					return exec_mapvardecl(seq->child.mapvardecl);
 					break;
 		case AST_ASSIGNMENTS:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_ASSIGNMENTS\n");
+					return exec_varassignment(seq->child.assignments);
 					break;
 		case AST_RETURN:	if(EXECVERBOSE())printf(":EXEC: Sequential execution AST_RETURN\n");
 					break;
@@ -102,6 +103,7 @@ int exec_genvardecl(struct ast_sequential_genvardecl *node){
 			if(EXECVERBOSE())printf(":EXEC: No more space in vms variable table. Aborting execution\n");
 			return 1;
 		}
+		printf("%s",list->value);
 		vms_assign_to_bin_location(currentbinlocation, list->value);
 		list = list->next;
 	}
@@ -153,4 +155,25 @@ int exec_add_keyval_pairs(char *mapname, struct keyvalpairs *pairs){
 
 int exec_shellecho(struct ast_sequential_shellecho *node){
 	return shellexecute(node->value);
+}
+
+int exec_varassignment(struct ast_sequential_varassignment *node){
+	if(EXECVERBOSE())printf(":EXEC: Variable assignments\n");
+	struct var_assignments *assignments = node->assignments;
+	if(assignments->type != ASSIGN_KEYVALPAIRS && assignments->type != ASSIGN_EXPRESSION) return exec_varassignment_aux1(assignments);
+	return 0;
+}
+int exec_varassignment_aux1(struct var_assignments *node){
+	variable_ptr_t binlocation = vms_var_lookup(node->varname, 0);
+	if(binlocation != TOTAL_SLOTS){
+		if(EXECVERBOSE())printf(":EXEC: Variable for assignment has bin location: %ld\n", binlocation);
+		char *value = vms_getvaluebylocation(binlocation);
+		vms_assign_to_bin_location(binlocation, "changed");
+		return 0;
+
+	}
+	else{
+		if(EXECVERBOSE())printf(":EXEC: Cannot find variable {%s} in the variable table. Aborting execution\n", node->varname);
+		return 1;
+	}
 }

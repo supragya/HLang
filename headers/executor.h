@@ -8,3 +8,5 @@ int exec_genvardecl(struct ast_sequential_genvardecl *node);
 int exec_mapvardecl(struct ast_sequential_mapvardecl *node);
 int exec_add_keyval_pairs(char *mapname, struct keyvalpairs *pairs);
 int exec_shellecho(struct ast_sequential_shellecho *node);
+int exec_varassignment(struct ast_sequential_varassignment *node);
+int exec_varassignment_aux1(struct var_assignments *node);

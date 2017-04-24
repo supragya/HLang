@@ -18,6 +18,7 @@ int ast_init(){
 	currentmapvarlisthead = NULL;
 	currentvardeclassignmentlisthead = NULL;
 	currentfunccallargshead = NULL;
+	currentfunccallargsdiscretehead = NULL;
 	currentreturnvalhead = NULL;
 	currentexpression1head = NULL;
 	currentexpression2head = NULL;
@@ -233,9 +234,16 @@ void ast_add_seq_vardecl(){
 void ast_make_vardecl_assignment(char *varname, char *value){
 	struct vardecl_assignmentlist *tempvardeclassignmentlist = malloc(sizeof(struct vardecl_assignmentlist));
 	tempvardeclassignmentlist->varname = malloc(sizeof(char)*(strlen(varname)+1));
-	tempvardeclassignmentlist->value = malloc(sizeof(char)*(strlen(value)+1));
 	strcpy(tempvardeclassignmentlist->varname, varname);
-	strcpy(tempvardeclassignmentlist->value, value);
+	if(!strcmp(value,"0")){
+		tempvardeclassignmentlist->value = malloc(sizeof(char)*(strlen(value)+1));
+		strcpy(tempvardeclassignmentlist->value, value);
+	}
+	else{
+		tempvardeclassignmentlist->value = NULL;
+		tempvardeclassignmentlist->expr = currentexpression1head->data;
+		currentexpression1head = currentexpression1head->next;
+	}
 	tempvardeclassignmentlist->next = currentvardeclassignmentlisthead;
 	currentvardeclassignmentlisthead = tempvardeclassignmentlist;
 	if(ASTVERBOSE())printf(":AST: Made vardecl assignment :{%s|%s}\n", tempvardeclassignmentlist->varname, tempvardeclassignmentlist->value);
@@ -247,6 +255,7 @@ void ast_make_vardecl_assignment(char *varname, char *value){
 		tempvardeclassignmentlist = tempvardeclassignmentlist->next;
 	}
 	if(ASTVERBOSE())printf("\n");
+	ast_display_exprll_status();
 }
 
 void ast_make_vardecl_assignment_defaultval(char *varname){
@@ -254,76 +263,67 @@ void ast_make_vardecl_assignment_defaultval(char *varname){
 }
 
 void ast_add_arguments_string(char *argstr){
-	struct functioncallargs *temparg = malloc(sizeof(struct functioncallargs));
-	temparg->argtype = F_STRING;
-	temparg->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
-	temparg->next = NULL;
-	strcpy(temparg->argument_str, argstr);
-
-	if(currentfunccallargshead == NULL)
-		currentfunccallargshead = temparg;
-	else{
-		struct functioncallargs *traverser = currentfunccallargshead;
-		while(traverser->next != NULL)
-			traverser = traverser->next;
-		traverser->next = temparg;
-	}
-
-	if(ASTVERBOSE())printf(":AST: Added functioncall argument {stringtype|%s}\n", temparg->argument_str);
-	if(ASTVERBOSE())printf(":AST: Current argument list: ");
-	temparg = currentfunccallargshead;
-	while(temparg != NULL){
-		if(temparg->argtype == F_STRING){
-			if(ASTVERBOSE())printf("  {stringtype|%s}  ", temparg->argument_str);
-		}
-		else if(temparg->argtype == F_VARNAME){
-			if(ASTVERBOSE())printf("  {VARNAME|%s}  ", temparg->argument_str);
-		}
-		temparg = temparg->next;
-	}
-	if(ASTVERBOSE())printf("\n");
+	if(ASTVERBOSE())printf(":AST: Function arg discrete STRING type: %s\n",argstr);
+	struct functioncallargs *temp = malloc(sizeof(struct functioncallargs));
+	temp->nextarg = NULL;
+	temp->argtype = F_STRING;
+	temp->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
+	strcpy(temp->argument_str, argstr);
+	temp->fcall = NULL;
+	temp->shellecho = NULL;
+	currentfunccallargsdiscretehead = temp;
+	ast_display_funcll_status();
 }
-
 void ast_add_arguments_varname(char *argstr){
-	struct functioncallargs *temparg = malloc(sizeof(struct functioncallargs));
-	temparg->argtype = F_VARNAME;
-	temparg->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
-	temparg->next = NULL;
-	strcpy(temparg->argument_str, argstr);
-
-	if(currentfunccallargshead == NULL)
-		currentfunccallargshead = temparg;
-	else{
-		struct functioncallargs *traverser = currentfunccallargshead;
-		while(traverser->next != NULL)
-			traverser = traverser->next;
-		traverser->next = temparg;
-	}
-
-	if(ASTVERBOSE())printf(":AST: Added functioncall argument {vartype|%s}\n", temparg->argument_str);
-	if(ASTVERBOSE())printf(":AST: Current argument list: ");
-	temparg = currentfunccallargshead;
-	while(temparg != NULL){
-		if(temparg->argtype == F_STRING){
-			if(ASTVERBOSE())printf("  {stringtype|%s}  ", temparg->argument_str);
-		}
-		else if(temparg->argtype == F_VARNAME){
-			if(ASTVERBOSE())printf("  {VARNAME|%s}  ", temparg->argument_str);
-		}
-		temparg = temparg->next;
-	}
-	if(ASTVERBOSE())printf("\n");
+	if(ASTVERBOSE())printf(":AST: Function arg discrete VARIABLE type: %s\n",argstr);
+	struct functioncallargs *temp = malloc(sizeof(struct functioncallargs));
+	temp->nextarg = NULL;
+	temp->argtype = F_VARNAME;
+	temp->argument_str = malloc(sizeof(char)*(strlen(argstr)+1));
+	strcpy(temp->argument_str, argstr);
+	temp->fcall = NULL;
+	temp->shellecho = NULL;
+	currentfunccallargsdiscretehead = temp;
+	ast_display_funcll_status();
 }
-
+void ast_add_arguments_functioncall(char *functionname){
+	if(ASTVERBOSE())printf(":AST: Function arg discrete FUNCTIONCALL type: %s\n",functionname);
+	struct functioncallargs *temp = malloc(sizeof(struct functioncallargs));
+	temp->nextarg = NULL;
+	temp->argtype = F_FUNCCALL;
+	temp->argument_str = NULL;
+	temp->fcall = malloc(sizeof(struct ast_sequential_functioncall));
+	temp->fcall->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
+	strcpy(temp->fcall->functionname, functionname);
+	temp->fcall->args = currentfunccallargshead->data;
+	currentfunccallargshead = currentfunccallargshead->next;
+	temp->shellecho = NULL;
+	currentfunccallargsdiscretehead = temp;
+	ast_display_funcll_status();
+}
+void ast_add_arguments_shellecho(char *echo){
+	if(ASTVERBOSE())printf(":AST: Function arg discrete SHELLECHO type: %s\n",echo);
+	struct functioncallargs *temp = malloc(sizeof(struct functioncallargs));
+	temp->nextarg = NULL;
+	temp->argtype = F_SHELLECHO;
+	temp->argument_str = NULL;
+	temp->shellecho = malloc(sizeof(struct ast_sequential_shellecho));
+	temp->shellecho->value = malloc(sizeof(char)*(strlen(echo)+1));
+	strcpy(temp->shellecho->value, echo);
+	temp->fcall = NULL;
+	currentfunccallargsdiscretehead = temp;
+	ast_display_funcll_status();
+}
 void ast_add_seq_functioncall(char *functionname){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_FUNCTIONCALL;
 	currentsequentialhead->child.functioncall = malloc(sizeof(struct ast_sequential_functioncall));
 	currentsequentialhead->child.functioncall->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
 	strcpy(currentsequentialhead->child.functioncall->functionname, functionname);
-	currentsequentialhead->child.functioncall->args = currentfunccallargshead;
-	currentfunccallargshead = NULL;
+	currentsequentialhead->child.functioncall->args = currentfunccallargshead->data;
+	currentfunccallargshead = currentfunccallargshead->next;
 	if(ASTVERBOSE())printf(":AST: Found a functioncall to {%s}\n", currentsequentialhead->child.functioncall->functionname);
+	ast_display_funcll_status();
 }
 void ast_set_returnval_expression(){
 	currentreturnvalhead = malloc(sizeof(struct returnval));
@@ -364,7 +364,23 @@ void ast_add_expr3_discrete_term_variable(char *varname){
 	ast_display_expr3_discrete_termll_status();
 	ast_display_exprll_status();
 }
-
+void ast_display_funcll_status(){
+	struct functioncallargsll *temp1 = currentfunccallargshead;
+	struct functioncallargs *temp2 = currentfunccallargsdiscretehead;
+	if(ASTVERBOSE())printf(":AST: Current functioncall arguments LL status: ");
+	int cnt = 0;
+	while(temp1 != NULL){
+		cnt++;
+		temp1 = temp1->next;
+	}
+	if(ASTVERBOSE())printf("  [argsll|%d]  ",cnt);
+	cnt = 0;
+	while(temp2 != NULL){
+		cnt++;
+		temp2 = temp2->nextarg;
+	}
+	if(ASTVERBOSE())printf("  [discargs|%d]\n",cnt);
+}
 void ast_add_expr3_unprec(enum expr_unary_preceder_type type){
 	if(ASTVERBOSE())printf(":AST: Adding expression 3 unary precedor type: ");
 	switch(type){
@@ -678,9 +694,10 @@ void ast_add_condition_component_functioncall(char *funcname){
 	temp->data->type = COMP_FUNC;
 	temp->data->func = malloc(sizeof(struct ast_sequential_functioncall));
 	temp->data->func->functionname = malloc(sizeof(char)*(strlen(funcname)+1));
-	temp->data->func->args = currentfunccallargshead;
-	currentfunccallargshead = NULL;
+	temp->data->func->args = currentfunccallargshead->data;
+	currentfunccallargshead = currentfunccallargshead->next;
 	ast_display_condll_stauts();
+	ast_display_funcll_status();
 }
 void ast_add_condition1_condition2(){
 	if(ASTVERBOSE())printf(":AST: Shifting condition2 element to condition1\n");
@@ -844,6 +861,25 @@ void ast_add_expr3_discrete_term_functioncall(char *functionname){
 	temp->data->type = DISCRETE_FUNCTIONCALL;
 	temp->data->functioncalldata = malloc(sizeof(struct ast_sequential_functioncall));
 	temp->data->functioncalldata->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
-	temp->data->functioncalldata->args = currentfunccallargshead;
+	temp->data->functioncalldata->args = currentfunccallargshead->data;
 	currentfunccallargshead = currentfunccallargshead->next;
+	ast_display_funcll_status();
+}
+void ast_add_argument_to_llnode(){
+	if(ASTVERBOSE())printf(":AST: Moving discrete function arg to head's argument list\n");
+	struct functioncallargs *node = currentfunccallargshead->data;
+	while(node->nextarg != NULL)
+		node = node->nextarg;
+	node->nextarg = currentfunccallargsdiscretehead;
+	currentfunccallargsdiscretehead = NULL;
+	ast_display_funcll_status();
+}
+void ast_add_argument_to_llhead(){
+	if(ASTVERBOSE())printf(":AST: Moving discrete function arg infront of head\n");
+	struct functioncallargsll *temp = malloc(sizeof(struct functioncallargsll));
+	temp->data = currentfunccallargsdiscretehead;
+	currentfunccallargsdiscretehead = NULL;
+	temp->next = currentfunccallargshead;
+	currentfunccallargshead = temp;
+	ast_display_funcll_status();
 }

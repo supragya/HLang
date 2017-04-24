@@ -31,7 +31,9 @@ enum ast_iterativeconstructtype{
 
 enum functioncallargtype{
 	F_STRING,
-	F_VARNAME
+	F_VARNAME,
+	F_FUNCCALL,
+	F_SHELLECHO
 };
 
 enum returntype{
@@ -67,14 +69,21 @@ struct functioncallargs{
 	enum functioncallargtype argtype;
 	char *argument_str;
 	struct ast_sequential_functioncall *fcall;
-	struct functioncallargs *next;
+	struct functioncallargs *nextarg;
+	struct ast_sequential_shellecho *shellecho;
 };
+struct functioncallargsll{
+	struct functioncallargs *data;
+	struct functioncallargsll *next;
+};
+
 struct ast_sequential_genvardecl{
 	struct vardecl_assignmentlist *list;
 };
 struct vardecl_assignmentlist{
 	char *varname;
 	char *value;
+	struct expr_expression *expr;
 	struct vardecl_assignmentlist *next;
 };
 struct ast_sequential_mapvardecl{
@@ -316,7 +325,8 @@ struct ast_sequentialnode *currentsequentialhead;
 struct keyvalpairs *currentkeyvalpairshead;
 struct mapvarlist *currentmapvarlisthead;
 struct vardecl_assignmentlist *currentvardeclassignmentlisthead;
-struct functioncallargs *currentfunccallargshead;
+struct functioncallargsll *currentfunccallargshead;
+struct functioncallargs *currentfunccallargsdiscretehead;
 struct returnval *currentreturnvalhead;
 struct expr_expression1ll *currentexpression1head;
 struct expr_expression2ll *currentexpression2head;
@@ -389,3 +399,6 @@ void ast_add_condition2_land_condition3();
 void ast_display_condll_stauts();
 void ast_add_expr3_discrete_term_functioncall(char *functionname);
 void ast_add_expr3_discrete_term_shellecho(char *echo);
+void ast_add_argument_to_llnode();
+void ast_add_argument_to_llhead();
+void ast_display_funcll_status();

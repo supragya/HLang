@@ -292,3 +292,7 @@ char *vms_map_part(char *mapelement){
 	ret[pos]='\0';
 	return ret;
 }
+
+char *vms_getvaluebylocation(variable_ptr_t binlocation){
+	return strdup(storage[binlocation].value);
+}

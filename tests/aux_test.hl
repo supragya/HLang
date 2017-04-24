@@ -1,8 +1,6 @@
 #!/script/HLang
 
 function main{
-	declare map $root = {"o", "tt"};
-	$xy = 900 +($3+80) + <% mkdir foo> + foo(<%neter>, furnace(30), 70);
-	if(99 == 900 && !($var) || !(4)){}
+	declare $xy;
+	$xy++;
 }
-function foo{}
