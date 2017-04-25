@@ -36,3 +36,4 @@ int solve_condition(struct condition1 *cond);
 int solve_condition2(struct condition2 *cond);
 int solve_condition3(struct condition3 *cond);
 int exec_for_condition(struct conditioncomponent *comp);
+int exec_for_condition_comprelcomp(struct conditioncomponent *component1, enum relopr rel, struct conditioncomponent *component2);

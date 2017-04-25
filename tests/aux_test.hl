@@ -1,10 +1,13 @@
 #!/script/HLang
 
 function main{
-	if(0 == 200){
-		declare $var;
+	if(500 == 500 && <%shellecho>){
+		declare $iif;
 	}
 	elif(200 == 2000){
-		declare $rr;
+		declare $el;
+	}
+	else{
+		declare $ee;
 	}
 }

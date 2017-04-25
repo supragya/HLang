@@ -121,7 +121,7 @@ int exec_elif(struct ast_elifsel *elifblock){
 		}
 		elifblock = elifblock->next;
 	}
-	return 0;
+	return 1;
 }
 int exec_else(struct ast_elsesel *elseblock){
 	if(EXECVERBOSE())printf(":EXEC: Executing else statement\n");
@@ -442,15 +442,7 @@ int solve_condition3(struct condition3 *cond){
 	switch(cond->type){
 		case COND3_COND:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COND\n"); ret = solve_condition(cond->cond1); break;
 		case COND3_COMP:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP\n"); ret  = exec_for_condition(cond->component1); break;
-		case COND3_COMP_REL_COMP:
-			switch(cond->rel){
-				case REL_EQ:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = EQ]\n"); ret  = (exec_for_condition(cond->component1) == exec_for_condition(cond->component2)); break;
-				case REL_NQ:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = NQ]\n"); ret  = (exec_for_condition(cond->component1) != exec_for_condition(cond->component2)); break;
-				case REL_GT:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = GT]\n"); ret  = (exec_for_condition(cond->component1) >  exec_for_condition(cond->component2)); break;
-				case REL_LT:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = LT]\n"); ret  = (exec_for_condition(cond->component1) <  exec_for_condition(cond->component2)); break;
-				case REL_GE:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = GE]\n"); ret  = (exec_for_condition(cond->component1) >= exec_for_condition(cond->component2)); break;
-				case REL_LE:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = LE]\n"); ret  = (exec_for_condition(cond->component1) <= exec_for_condition(cond->component2)); break;
-			}
+		case COND3_COMP_REL_COMP: if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP\n"); ret = exec_for_condition_comprelcomp(cond->component1, cond->rel, cond->component2); break;
 	}
 	if (cond->neg == NEG_YES){
 		if(ASTVERBOSE())printf(":EXEC: Condition3 found NEG, changing %d to %d\n", ret, !ret);
@@ -477,6 +469,527 @@ int exec_for_condition(struct conditioncomponent *comp){
 				return shellexecute(comp->name); break;
 		case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: Condition component needs functioncall. Not implemented, meanwhile 0\n");
 				return 0;
+				break;
+	}
+}
+int exec_for_condition_comprelcomp(struct conditioncomponent *component1, enum relopr rel, struct conditioncomponent *component2){
+	int shellresult;
+	char *variableval;
+	variable_ptr_t binlocation;
+	switch(rel){
+		case REL_EQ:	switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC EQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO EQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO EQ COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) == shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO EQ COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return !strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO EQ COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return !strcmp(longtostring(shellresult), component2->name);
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME EQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME EQ COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return !strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name)));
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME EQ COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return !strcmp(variableval, vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME EQ COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return !strcmp(component2->name, vms_getvaluebylocation(binlocation));
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR EQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR EQ COMP_SHELLECHO\n");
+								return !strcmp(component1->name, longtostring(shellexecute(component2->name)));
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR EQ COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return !strcmp(component1->name, vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR EQ COMP_STR\n");
+								return !strcmp(component1->name, component2->name);
+								break;
+					}
+					break;
+				}
+				break;
+
+
+		case REL_NQ:	switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC NQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO NQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO NQ COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) != shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO NQ COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO NQ COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return strcmp(longtostring(shellresult), component2->name);
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME NQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME NQ COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name)));
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME NQ COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(variableval, vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME NQ COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(component2->name, vms_getvaluebylocation(binlocation));
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR NQ COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR NQ COMP_SHELLECHO\n");
+								return strcmp(component1->name, longtostring(shellexecute(component2->name)));
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR NQ COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return strcmp(component1->name, vms_getvaluebylocation(binlocation));
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR NQ COMP_STR\n");
+								return strcmp(component1->name, component2->name);
+								break;
+					}
+					break;
+				}
+				break;
+
+
+		case REL_GT:	switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC GT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO GT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GT COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) > shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GT COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation)) > 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GT COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return strcmp(longtostring(shellresult), component2->name) > 0;
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GT COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name))) > 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GT COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(variableval, vms_getvaluebylocation(binlocation)) > 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GT COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(component2->name, vms_getvaluebylocation(binlocation)) > 0;
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR GT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR GT COMP_SHELLECHO\n");
+								return strcmp(component1->name, longtostring(shellexecute(component2->name))) > 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR GT COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return strcmp(component1->name, vms_getvaluebylocation(binlocation)) > 0;
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR GT COMP_STR\n");
+								return strcmp(component1->name, component2->name) > 0;
+								break;
+					}
+					break;
+				}
+				break;
+
+
+		case REL_LT:		switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC LT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO LT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LT COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) < shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LT COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation)) < 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LT COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return strcmp(longtostring(shellresult), component2->name) < 0;
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LT COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name))) < 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LT COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(variableval, vms_getvaluebylocation(binlocation)) < 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LT COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(component2->name, vms_getvaluebylocation(binlocation)) < 0;
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR LT COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR LT COMP_SHELLECHO\n");
+								return strcmp(component1->name, longtostring(shellexecute(component2->name))) < 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR LT COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return strcmp(component1->name, vms_getvaluebylocation(binlocation)) < 0;
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR LT COMP_STR\n");
+								return strcmp(component1->name, component2->name) < 0;
+								break;
+					}
+					break;
+				}
+				break;
+
+
+
+		case REL_GE:		switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC GE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO GE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GE COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) >= shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GE COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation)) >= 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO GE COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return strcmp(longtostring(shellresult), component2->name) >= 0;
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GE COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name))) >= 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GE COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(variableval, vms_getvaluebylocation(binlocation)) >= 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME GE COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(component2->name, vms_getvaluebylocation(binlocation)) >= 0;
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR GE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR GE COMP_SHELLECHO\n");
+								return strcmp(component1->name, longtostring(shellexecute(component2->name))) >= 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR GE COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return strcmp(component1->name, vms_getvaluebylocation(binlocation)) >= 0;
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR GE COMP_STR\n");
+								return strcmp(component1->name, component2->name) >= 0;
+								break;
+					}
+					break;
+				}
+				break;
+
+		case REL_LE:	switch(component1->type){
+					case COMP_FUNC:
+					switch(component2->type){
+						default: if(ASTVERBOSE())printf(":EXEC: types COMP_FUNC LE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+					}
+					break;
+
+					case COMP_SHELLECHO:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(" :EXEC: types COMP_SHELLECHO LE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LE COMP_SHELLECHO\n");
+								return (shellexecute(component1->name) <= shellexecute(component2->name));
+								break;
+						case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LE COMP_VARNAME\n");
+								shellresult = shellexecute(component1->name);
+								binlocation = vms_var_lookup(component2->name, 0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(longtostring(shellresult),vms_getvaluebylocation(binlocation)) <= 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_SHELLECHO LE COMP_STR\n");
+								shellresult = shellexecute(component1->name);
+								return strcmp(longtostring(shellresult), component2->name) <= 0;
+								break;
+					}
+					break;
+
+					case COMP_VARNAME:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LE COMP_SHELLECHO\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(vms_getvaluebylocation(binlocation), longtostring(shellexecute(component2->name))) <= 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LE COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								variableval = vms_getvaluebylocation(binlocation);
+								binlocation = vms_var_lookup(component2->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(variableval, vms_getvaluebylocation(binlocation)) <= 0;
+								break;
+						case COMP_STR: if(ASTVERBOSE())printf(":EXEC: types COMP_VARNAME LE COMP_STR\n");
+								binlocation = vms_var_lookup(component1->name,0);
+								if(binlocation == TOTAL_SLOTS)
+									return 0;
+								return strcmp(component2->name, vms_getvaluebylocation(binlocation)) <= 0;
+								break;
+					}
+					break;
+
+					case COMP_STR:
+					switch(component2->type){
+						case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: types COMP_STR LE COMP_FUNC\n");
+								//TODO Functioncall here
+								return 0;
+								break;
+						case COMP_SHELLECHO:if(ASTVERBOSE())printf(":EXEC: types COMP_STR LE COMP_SHELLECHO\n");
+								return strcmp(component1->name, longtostring(shellexecute(component2->name))) <= 0;
+								break;
+						case COMP_VARNAME:if(ASTVERBOSE())printf(":EXEC: types COMP_STR LE COMP_VARNAME\n");
+								binlocation = vms_var_lookup(component2->name, 0);
+								return strcmp(component1->name, vms_getvaluebylocation(binlocation)) <= 0;
+								break;
+						case COMP_STR:	if(ASTVERBOSE())printf(":EXEC: types COMP_STR LE COMP_STR\n");
+								return strcmp(component1->name, component2->name) <= 0;
+								break;
+					}
+					break;
+				}
 				break;
 	}
 }

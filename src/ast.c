@@ -795,12 +795,12 @@ void ast_add_discrete_condition_comp(){
 	currentcondition3head = temp;
 	temp->data = malloc(sizeof(struct condition3));
 	temp->data->type = COND3_COMP;
-	temp->data->component1 = currentconditioncomponenthead->data;
-	currentconditioncomponenthead = currentconditioncomponenthead->next;
+	temp->data->component1 = currentconditioncomponenthead->data==NULL?NULL:currentconditioncomponenthead->data;
+	currentconditioncomponenthead = currentconditioncomponenthead == NULL?NULL:currentconditioncomponenthead->next;
 	temp->data->component2 = NULL;
 	temp->data->cond1 = NULL;
-	temp->data->neg = currentconditionnegationhead->neg;
-	currentconditionnegationhead = currentconditionnegationhead->next;
+	temp->data->neg = currentconditionnegationhead == NULL?0:currentconditionnegationhead->neg;
+	currentconditionnegationhead = currentconditionnegationhead == NULL?NULL:currentconditionnegationhead->next;
 	ast_display_condll_status();
 }
 void ast_add_discrete_condition_comp_rel_comp(){
