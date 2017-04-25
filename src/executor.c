@@ -420,5 +420,63 @@ char *longtostring(long val){
 	return retstr;
 }
 int solve_condition(struct condition1 *cond){
-	return 1;
+	int ret = 0;
+	switch(cond->type){
+		case COND1_NONE: if(ASTVERBOSE())printf(":EXEC: Condition1 solving with COND1_NONE\n"); ret = solve_condition2(cond->cond2); break;
+		case COND1_LOR: if(ASTVERBOSE())printf(":EXEC: Condition1 solving with COND2_LOR\n"); ret = (solve_condition(cond->cond1) || solve_condition2(cond->cond2)); break;
+	}
+	if(ASTVERBOSE())printf(":EXEC: Condition1 returns: %d\n", ret);
+	return ret;
+}
+int solve_condition2(struct condition2 *cond){
+	int ret = 0;
+	switch(cond->type){
+		case COND2_NONE: if(ASTVERBOSE())printf(":EXEC: Condition2 solving with COND2_NONE\n"); ret = solve_condition3(cond->cond3); break;
+		case COND2_LAND: if(ASTVERBOSE())printf(":EXEC: Condition2 solving with COND2_LAND\n"); ret = (solve_condition2(cond->cond2) && solve_condition3(cond->cond3)); break;
+	}
+	if(ASTVERBOSE())printf(":EXEC: Condition2 returns: %d\n", ret);
+	return ret;
+}
+int solve_condition3(struct condition3 *cond){
+	int ret = 0;
+	switch(cond->type){
+		case COND3_COND:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COND\n"); ret = solve_condition(cond->cond1); break;
+		case COND3_COMP:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP\n"); ret  = exec_for_condition(cond->component1); break;
+		case COND3_COMP_REL_COMP:
+			switch(cond->rel){
+				case REL_EQ:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = EQ]\n"); ret  = (exec_for_condition(cond->component1) == exec_for_condition(cond->component2)); break;
+				case REL_NQ:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = NQ]\n"); ret  = (exec_for_condition(cond->component1) != exec_for_condition(cond->component2)); break;
+				case REL_GT:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = GT]\n"); ret  = (exec_for_condition(cond->component1) >  exec_for_condition(cond->component2)); break;
+				case REL_LT:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = LT]\n"); ret  = (exec_for_condition(cond->component1) <  exec_for_condition(cond->component2)); break;
+				case REL_GE:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = GE]\n"); ret  = (exec_for_condition(cond->component1) >= exec_for_condition(cond->component2)); break;
+				case REL_LE:if(ASTVERBOSE())printf(":EXEC: Condition3 solving with COND3_COMP_REL_COMP [REL = LE]\n"); ret  = (exec_for_condition(cond->component1) <= exec_for_condition(cond->component2)); break;
+			}
+	}
+	if (cond->neg == NEG_YES){
+		if(ASTVERBOSE())printf(":EXEC: Condition3 found NEG, changing %d to %d\n", ret, !ret);
+		return !ret;
+	}
+	if(ASTVERBOSE())printf(":EXEC: Condition3 returns: %d\n", ret);
+	return ret;
+}
+int exec_for_condition(struct conditioncomponent *comp){
+	switch (comp->type) {
+		case COMP_STR: return strcmp(comp->name, "0"); break;
+		case COMP_VARNAME: if(ASTVERBOSE())printf(":EXEC: Condition component needs variable. Looking up in vms\n");
+				   variable_ptr_t binlocation = vms_var_lookup(comp->name, 0);
+				   if(binlocation == TOTAL_SLOTS){
+					if(ASTVERBOSE())printf(":EXEC: Looked up variable %s in vms, not found. Default returning 0\n",comp->name);
+					return 0;
+				   }
+				   else{
+					if(ASTVERBOSE())printf("Found in vms the variable %s, truth value is %d\n", comp->name, strcmp(vms_getvaluebylocation(binlocation), "0"));
+				   	return strcmp(vms_getvaluebylocation(binlocation), "0");
+				   }
+				break;
+		case COMP_SHELLECHO: if(ASTVERBOSE())printf(":EXEC: Condition component needs shellecho. Sending to shell\n");
+				return shellexecute(comp->name); break;
+		case COMP_FUNC: if(ASTVERBOSE())printf(":EXEC: Condition component needs functioncall. Not implemented, meanwhile 0\n");
+				return 0;
+				break;
+	}
 }

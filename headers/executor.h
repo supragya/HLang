@@ -33,3 +33,6 @@ int exec_if(struct ast_ifsel *ifblock);
 int exec_elif(struct ast_elifsel *elifsel);
 int exec_else(struct ast_elsesel *elsesel);
 int solve_condition(struct condition1 *cond);
+int solve_condition2(struct condition2 *cond);
+int solve_condition3(struct condition3 *cond);
+int exec_for_condition(struct conditioncomponent *comp);
