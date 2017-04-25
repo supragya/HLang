@@ -6,6 +6,7 @@ struct exec_expr_solution{
 	enum solvable solvable;
 	char *solution;
 };
+int exec_functioncall(struct ast_sequential_functioncall *function);
 int exec_begin_execution();
 int exec_constructs(struct ast_construct *entry);
 struct ast_construct* exec_provide_constructlist_for_function(char *functionname);

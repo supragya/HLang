@@ -54,8 +54,8 @@ void vms_assign_to_bin_location(variable_ptr_t var, char *str);
  *  @param	scope		scope of the variable to be found out
  *  @return	location in storage bin where the variable is stored. If not found, TOTAL_SLOT is returned
  */
-variable_ptr_t vms_var_lookup(char *varname, unsigned int scope);
-
+variable_ptr_t vms_var_lookup_strict(char *varname, unsigned int scope);
+variable_ptr_t vms_var_lookup_leanient(char *varname);
 variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope);
 int vms_init();
 void vms_display_variable_table();

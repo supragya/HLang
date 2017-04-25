@@ -1,8 +1,13 @@
 #!/script/HLang
-
+function foo{
+	declare $nachos = 20;
+}
 function main{
-	if(500 == 500 && <%shellecho>){
-		declare $iif;
+	declare map $mapvar;
+	declare $rr[500] = 66;
+	if(500 == 500){
+		declare $iif = $rr[500];
+		<%shellex>;
 	}
 	elif(200 == 2000){
 		declare $el;
@@ -10,4 +15,5 @@ function main{
 	else{
 		declare $ee;
 	}
+	foo(20);
 }

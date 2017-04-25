@@ -8,6 +8,7 @@
 #include "hlang-parser.h"
 #include "variable_mgmt.h"
 #include "verbose.h"
+#include "scope_mgmt.h"
 unsigned long locations_available = TOTAL_SLOTS;
 
 variable_t storage[TOTAL_SLOTS];
@@ -31,9 +32,9 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		if(vms_is_maptype(new_varname)){
 			if(VMSVERBOSE())printf(":VMS: %s is a MELNAME\n", new_varname);
 			char *mapname = vms_map_part(new_varname);
-			if(!vms_is_mapname_exists(mapname,0)){
+			if(!vms_is_mapname_exists(mapname,sms_get_current_scope())){
 				if(VMSVERBOSE())printf(":VMS: WARNING: Map name %s of MELNAME %s does not exist in map list. VMS attempts its addition.\n", mapname, new_varname);
-				if(vms_add_new_map(mapname,0)) return TOTAL_SLOTS;
+				if(vms_add_new_map(mapname,sms_get_current_scope())) return TOTAL_SLOTS;
 			}
 		}
 		/* Populating the variable data */
@@ -54,7 +55,6 @@ variable_ptr_t vms_add_new_variable(char *new_varname, unsigned int scope){
 		return TOTAL_SLOTS;
 	}
 }
-
 variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope){
 	unsigned int len = strlen(mapelementname);
 	char *mapname = malloc(sizeof(char)*(len+1));
@@ -71,7 +71,6 @@ variable_ptr_t vms_add_new_mapelement(char *mapelementname, unsigned int scope){
 		return vms_add_new_variable(mapelementname, scope);
 	}
 }
-
 int vms_add_new_map(char *new_varname, unsigned int scope){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
@@ -101,7 +100,6 @@ int vms_add_new_map(char *new_varname, unsigned int scope){
 	vms_display_map_list();
 	return 0;
 }
-
 unsigned long vms_find_valid_location(char *varname){
 	/* Find hashed location in the bin corresponding to varname */
 	unsigned long hashval = vms_calchash(varname);
@@ -111,7 +109,6 @@ unsigned long vms_find_valid_location(char *varname){
 		hashval = (hashval+1)%TOTAL_SLOTS;
 	return hashval;
 }
-
 unsigned long vms_calchash(char *varname){
 	int len = strlen(varname);
 	unsigned int i = 0, temp;
@@ -126,7 +123,6 @@ unsigned long vms_calchash(char *varname){
 	}
 	return pos;
 }
-
 void vms_assign_to_bin_location(variable_ptr_t var, char *str){
 	if(VMSVERBOSE())printf(":VMS: Bin location %ld is assigned %s\n", var, str);
 	if (var >= TOTAL_SLOTS)
@@ -136,12 +132,15 @@ void vms_assign_to_bin_location(variable_ptr_t var, char *str){
 	strcpy(storage[var].value, str);
 	vms_display_variable_table();
 }
-
-void vms_assign_to_varname(char *varname, unsigned int scope, char *str){
-	vms_assign_to_bin_location(vms_var_lookup(varname, scope), str);
+void vms_assign_to_varname(char *varname, char *str){
+	variable_ptr_t binlocation = vms_var_lookup_leanient(varname);
+	if(binlocation == TOTAL_SLOTS){
+		if(VMSVERBOSE())printf(":VMS: Cannot find varname %s\n", varname);
+	}
+	else
+		vms_assign_to_bin_location(binlocation, str);
 }
-
-variable_ptr_t vms_var_lookup(char* varname, unsigned int scope){
+variable_ptr_t vms_var_lookup_strict(char* varname, unsigned int scope){
 	/* Find hash of the varname */
 	unsigned long hashval = vms_calchash(varname);
 
@@ -153,14 +152,28 @@ variable_ptr_t vms_var_lookup(char* varname, unsigned int scope){
 	/* Check whether we have the required variable */
 	return (storage[hashval].occupation == OCCUPIED && !strcmp(storage[hashval].name, varname) && storage[hashval].scope == scope) ? hashval : TOTAL_SLOTS;
 }
-
+variable_ptr_t vms_var_lookup_leanient(char *varname){
+	struct scope_node_t *temp = nodehead;
+	variable_ptr_t retval = TOTAL_SLOTS;
+	while(temp->is_border == NON_BORDER){
+		retval = vms_var_lookup_strict(varname, temp->scope);
+		if(retval != TOTAL_SLOTS){
+			break;
+		}
+		temp = temp->next;
+	}
+	/* one border allowed */
+	if(retval == TOTAL_SLOTS){
+		retval = vms_var_lookup_strict(varname, temp->scope);
+	}
+	return retval;
+}
 int vms_init(){
 	unsigned int i;
 	for(i = 0; i<TOTAL_SLOTS; i++)
 		storage[i].occupation = AVAILABLE;
 	return 0;
 }
-
 void vms_display_variable_table(){
 
 	if(VMSVERBOSE())printf("<<<<<<<<<<<<<<<< :VMS: VARIABLE TABLE >>>>>>>>>>>>>>>>>>>>>>>\n");
@@ -176,7 +189,6 @@ void vms_display_variable_table(){
 	}
 	if(VMSVERBOSE())printf("------------------------------------------------------------\n");
 }
-
 void vms_display_map_list(){
 	struct map_list *tempptr;
 	tempptr = mapliststart;
@@ -194,7 +206,6 @@ void vms_display_map_list(){
 	}
 	if(VMSVERBOSE())printf("------------------------------------------------------------\n");
 }
-
 int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
 	unsigned int i = 0;
 	while (i!=TOTAL_SLOTS){
@@ -205,9 +216,8 @@ int vms_is_already_declared_variable(char *new_varname, unsigned int scope){
 	}
 	return 0;
 }
-
 void vms_decommission_scope(unsigned int scope){
-	if(VMSVERBOSE())printf(":VMS Decommission scope %d\n", scope);
+	if(VMSVERBOSE())printf(":VMS: Decommission scope %d\n", scope);
 	/* Decommission from variable table */
 	unsigned int i = 0;
 	while (i!=TOTAL_SLOTS){
@@ -248,7 +258,6 @@ void vms_decommission_scope(unsigned int scope){
 	vms_display_map_list();
 	vms_display_variable_table();
 }
-
 int vms_is_mapname_exists(char *mapname, unsigned int scope){
 	if(VMSVERBOSE())printf(":VMS: is mapname exists\n");
 	vms_display_map_list();
@@ -262,7 +271,6 @@ int vms_is_mapname_exists(char *mapname, unsigned int scope){
 	}
 	return 0;
 }
-
 int vms_is_maptype(char *varname){
 	int len = strlen(varname);
 	if (varname[--len]==']'){
@@ -274,7 +282,6 @@ int vms_is_maptype(char *varname){
 	}
 	return 0;
 }
-
 char *vms_map_part(char *mapelement){
 	int len = strlen(mapelement);
 	int pos = 0;
@@ -292,7 +299,6 @@ char *vms_map_part(char *mapelement){
 	ret[pos]='\0';
 	return ret;
 }
-
 char *vms_getvaluebylocation(variable_ptr_t binlocation){
 	return strdup(storage[binlocation].value);
 }

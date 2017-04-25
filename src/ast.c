@@ -445,12 +445,12 @@ void ast_display_expr3_discrete_termll_status(){
 	struct expr_discrete_termll *tempterm = currentexpression3discretermhead;
 	while(tempterm != NULL){
 		switch(tempterm->data->type){
-			case DISCRETE_STRING: printf("  {string|%s}  ", tempterm->data->termdata); break;
-			case DISCRETE_VARIABLE: printf("  {variable|%s}  ", tempterm->data->termdata); break;
+			case DISCRETE_STRING: if(ASTVERBOSE())printf("  {string|%s}  ", tempterm->data->termdata); break;
+			case DISCRETE_VARIABLE: if(ASTVERBOSE())printf("  {variable|%s}  ", tempterm->data->termdata); break;
 		}
 		tempterm = tempterm->next;
 	}
-	printf("\n");
+	if(ASTVERBOSE())printf("\n");
 }
 void ast_display_expr3_unary_precll_status(){
 	if(ASTVERBOSE())printf(":AST: Current expression3 unary prec LL state: ");
@@ -497,7 +497,7 @@ void ast_add_expr3_unprecdiscrsucc(){
 		//case DISCRETE_FUNCTIONCALL: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
 		//case DISCRETE_SHELLECHO: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
 	}
-	printf("(null)}\n");
+	if(ASTVERBOSE())printf("(null)}\n");
 	//ast_display_expr3_discrete_termll_status();
 	//ast_display_expr3_unary_precll_status();
 	ast_display_exprll_status();
@@ -883,7 +883,7 @@ void ast_display_condll_status(){
 		temp6 = temp6->next;
 	}
 	if(ASTVERBOSE())printf(" [condneg|%d] ",cnt);
-	printf("\n");
+	if(ASTVERBOSE())printf("\n");
 }
 void ast_add_expr3_discrete_term_shellecho(char *echo){
 	if(ASTVERBOSE())printf(":AST: Adding shellecho{%s} to discrete_term\n", echo);
