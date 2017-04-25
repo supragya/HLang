@@ -3,7 +3,7 @@
 function main{
 	declare $rr=$xy+2, $xy = 2*3+(990+2);
 	declare map $d;
-	declare $er = 8990;
+	declare $er = 8990 + <%shell1>;
 	$er++;
 	if($var == 90){
 		declare $foo = 90;

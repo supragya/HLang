@@ -108,10 +108,24 @@ int exec_if(struct ast_ifsel *ifblock){
 	}
 }
 int exec_elif(struct ast_elifsel *elifblock){
+	int truthvalue, flag;
+	while(elifblock != NULL){
+		if(EXECVERBOSE())printf(":EXEC: Trying to execute elif statement\n");
+		truthvalue = solve_condition(elifblock->cond);
+		if(truthvalue == 0){
+			if(EXECVERBOSE())printf(":EXEC: Elif statement has a truth value of 0. Revert.\n");
+		}
+		else{
+			if(EXECVERBOSE())printf(":EXEC: Elif statement has a truth value of 1. Continuing.\n");
+			return exec_constructs(elifblock->constructs);
+		}
+		elifblock = elifblock->next;
+	}
 	return 0;
 }
 int exec_else(struct ast_elsesel *elseblock){
-	return 0;
+	if(EXECVERBOSE())printf(":EXEC: Executing else statement\n");
+	return exec_constructs(elseblock->constructs);
 }
 int exec_iterative_construct(struct ast_iterativenode *iter){
 	return 0;
