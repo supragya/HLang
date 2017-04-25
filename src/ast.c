@@ -35,13 +35,12 @@ int ast_init(){
 	currentconditionnegationhead = NULL;
 	return 0;
 }
-
 void ast_add_function(char *functionname){
 	if(ASTVERBOSE())printf(":AST: Adding functionname: %s\n", functionname);
 	struct ast_function_node *temp_function = malloc(sizeof(struct ast_function_node));
 
-	temp_function->executionlist = currentconstructhead;
-	currentconstructhead = NULL;
+	temp_function->executionlist = currentconstructhead->data;
+	currentconstructhead = currentconstructhead->next;
 
 	temp_function->functionname = malloc(sizeof(char)*(strlen(functionname)+1));
 	strcpy(temp_function->functionname, functionname);
@@ -57,7 +56,6 @@ void ast_add_function(char *functionname){
 	}
 	if(ASTVERBOSE())printf("\n");
 }
-
 void ast_add_seq(){
 	struct ast_sequentialnode *newseqnode;
 	newseqnode = malloc(sizeof(struct ast_sequentialnode));
@@ -74,20 +72,20 @@ void ast_add_seq(){
 		}
 		free(currentsequentialhead);
 		currentsequentialhead = NULL;
-		// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+		// if(ASTVERBOSE())printf("currentconstructhead->data is ctype: %d\n", currentconstructhead->data->ctype);
 		// if(ASTVERBOSE())printf(":AST: newseqnode made with name %s and value %s\n", newseqnode->name, newseqnode->child.shellecho->value);
 	}
 	if(ASTVERBOSE())printf(":AST: newseqnode made\n");
-	if(currentconstructhead == NULL){
-		if(ASTVERBOSE())printf(":AST: currentconstructhead is empty at this point, allocating memory\n");
-		currentconstructhead = malloc(sizeof(struct ast_construct));
-		currentconstructhead->ptr.sequential = newseqnode;
-		currentconstructhead->ctype = SEQUENTIAL;
-		currentconstructhead->next = NULL;
+	if(currentconstructhead->data == NULL){
+		if(ASTVERBOSE())printf(":AST: currentconstructhead->data is empty at this point, allocating memory\n");
+		currentconstructhead->data = malloc(sizeof(struct ast_construct));
+		currentconstructhead->data->ptr.sequential = newseqnode;
+		currentconstructhead->data->ctype = SEQUENTIAL;
+		currentconstructhead->data->next = NULL;
 	}
 	else{
-		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = currentconstructhead;
+		// if(ASTVERBOSE())printf("[AST]currentconstructhead->data was FULL\n");
+		struct ast_construct *temp_construct = currentconstructhead->data;
 		while(temp_construct->next != NULL){
 			temp_construct = temp_construct->next;
 		}
@@ -96,54 +94,108 @@ void ast_add_seq(){
 		temp_construct->ctype = SEQUENTIAL;
 		temp_construct->ptr.sequential= newseqnode;
 	}
-	ast_walk_constructs(currentconstructhead);
+	ast_walk_constructs(currentconstructhead->data);
 }
-
-void ast_add_sel(char *name){
-	struct ast_selectivenode *newselnode;
-	newselnode = malloc(sizeof(struct ast_selectivenode));
-	newselnode->name = malloc(sizeof(char)*(strlen(name)+1));
-	strcpy(newselnode->name, name);
+void ast_add_sel(){
 	// newselnode->next.ctype = NONE;
-	// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
-	if(ASTVERBOSE())printf(":AST: newselnode made with name %s\n", newselnode->name);
-	if(currentconstructhead == NULL){
-		currentconstructhead = malloc(sizeof(struct ast_construct));
-		currentconstructhead->ptr.selective = newselnode;
-		currentconstructhead->ctype = SELECTIVE;
-		currentconstructhead->next = NULL;
+	// if(ASTVERBOSE())printf("currentconstructhead->data is ctype: %d\n", currentconstructhead->data->ctype);
+	if(ASTVERBOSE())printf(":AST: newselnode made\n"	);
+	if(currentconstructhead->data == NULL){
+		currentconstructhead->data = malloc(sizeof(struct ast_construct));
+		currentconstructhead->data->ptr.selective = malloc(sizeof(struct ast_selectivenode));
+		currentconstructhead->data->ctype = SELECTIVE;
+		currentconstructhead->data->next = NULL;
 	}
 	else{
-		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = currentconstructhead;
+		// if(ASTVERBOSE())printf("[AST]currentconstructhead->data was FULL\n");
+		struct ast_construct *temp_construct = currentconstructhead->data;
 		while(temp_construct->next != NULL){
 			temp_construct = temp_construct->next;
 		}
 		temp_construct->next = malloc(sizeof(struct ast_construct));
 		temp_construct = temp_construct->next;
 		temp_construct->ctype = SELECTIVE;
-		temp_construct->ptr.selective = newselnode;
+		temp_construct->ptr.selective = malloc(sizeof(struct ast_selectivenode));
+		temp_construct->ptr.selective->ifblock = NULL;
+		temp_construct->ptr.selective->elifblock = NULL;
+		temp_construct->ptr.selective->elseblock = NULL;
 	}
-	ast_walk_constructs(currentconstructhead);
+	ast_walk_constructs(currentconstructhead->data);
 }
-
+void ast_add_sel_if(){
+	if(ASTVERBOSE())printf(":AST: Adding if statement\n");
+	struct ast_ifsel *temp = malloc(sizeof(struct ast_ifsel));
+	temp->cond = currentcondition1head->data;
+	currentcondition1head = currentcondition1head->next;
+	ast_display_condll_status();
+	temp->constructs = currentconstructhead->data;
+	currentconstructhead = currentconstructhead->next;
+	ast_add_sel();
+	struct ast_construct *temp_construct = currentconstructhead->data;
+	while(temp_construct->next != NULL){
+		temp_construct = temp_construct->next;
+	}
+	if(temp_construct->ctype == SELECTIVE){
+		temp_construct->ptr.selective->ifblock = temp;
+	}
+	ast_walk_constructs(currentconstructhead->data);
+}
+void ast_add_sel_elif(){
+	if(ASTVERBOSE())printf(":AST: Adding elif statement\n");
+	struct ast_elifsel *temp = malloc(sizeof(struct ast_elifsel));
+	temp->cond = currentcondition1head->data;
+	currentcondition1head = currentcondition1head->next;
+	ast_display_condll_status();
+	temp->constructs = currentconstructhead->data;
+	currentconstructhead = currentconstructhead->next;
+	temp->next = NULL;
+	struct ast_construct *temp_construct = currentconstructhead->data;
+	while(temp_construct->next != NULL){
+		temp_construct = temp_construct->next;
+	}
+	if(temp_construct->ctype == SELECTIVE){
+		struct ast_elifsel *t = temp_construct->ptr.selective->elifblock;
+		if(t == NULL){
+			temp_construct->ptr.selective->elifblock = temp;
+		}
+		else{
+			while(t->next != NULL)
+				t = t->next;
+			t->next = temp;
+		}
+	}
+}
+void ast_add_sel_else(){
+	if(ASTVERBOSE())printf(":AST: Adding else statement\n");
+	struct ast_elsesel *temp = malloc(sizeof(struct ast_elsesel));
+	temp->constructs = currentconstructhead->data;
+	currentconstructhead = currentconstructhead->next;
+	struct ast_construct *temp_construct = currentconstructhead->data;
+	while(temp_construct->next != NULL){
+		temp_construct = temp_construct->next;
+	}
+	if(temp_construct->ctype == SELECTIVE){
+		temp_construct->ptr.selective->elseblock = temp;
+	}
+	ast_walk_constructs(currentconstructhead->data);
+}
 void ast_add_iter(char *name){
 	struct ast_iterativenode *newiternode;
 	newiternode = malloc(sizeof(struct ast_iterativenode));
 	newiternode->name = malloc(sizeof(char)*(strlen(name)+1));
 	strcpy(newiternode->name, name);
 	//newiternode->next.ctype = NONE;
-	// if(ASTVERBOSE())printf("currentconstructhead is ctype: %d\n", currentconstructhead->ctype);
+	// if(ASTVERBOSE())printf("currentconstructhead->data is ctype: %d\n", currentconstructhead->data->ctype);
 	if(ASTVERBOSE())printf(":AST: newiternode made with name %s\n", newiternode->name);
-	if(currentconstructhead == NULL){
-		currentconstructhead = malloc(sizeof(struct ast_construct));
-		currentconstructhead->ptr.iterative = newiternode;
-		currentconstructhead->ctype = ITERATIVE;
-		currentconstructhead->next = NULL;
+	if(currentconstructhead->data == NULL){
+		currentconstructhead->data = malloc(sizeof(struct ast_construct));
+		currentconstructhead->data->ptr.iterative = newiternode;
+		currentconstructhead->data->ctype = ITERATIVE;
+		currentconstructhead->data->next = NULL;
 	}
 	else{
-		// if(ASTVERBOSE())printf("[AST]currentconstructhead was FULL\n");
-		struct ast_construct *temp_construct = currentconstructhead;
+		// if(ASTVERBOSE())printf("[AST]currentconstructhead->data was FULL\n");
+		struct ast_construct *temp_construct = currentconstructhead->data;
 		while(temp_construct->next != NULL){
 			temp_construct = temp_construct->next;
 		}
@@ -152,9 +204,8 @@ void ast_add_iter(char *name){
 		temp_construct->ctype = ITERATIVE;
 		temp_construct->ptr.iterative = newiternode;
 	}
-	ast_walk_constructs(currentconstructhead);
+	ast_walk_constructs(currentconstructhead->data);
 }
-
 void ast_walk_constructs(struct ast_construct *head){
 	if(ASTVERBOSE())printf(":AST: Construct walk::::  ");
 	struct ast_construct *temp_construct = head;
@@ -168,7 +219,6 @@ void ast_walk_constructs(struct ast_construct *head){
 	}
 	if(ASTVERBOSE())printf("\n" );
 }
-
 void ast_add_seq_shellecho(char *echo){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_SHELLECHO;
@@ -178,7 +228,6 @@ void ast_add_seq_shellecho(char *echo){
 	currentsequentialhead->child.shellecho->value = temp;
 	if(ASTVERBOSE())printf(":AST: Added shellecho: %s\n", currentsequentialhead->child.shellecho->value);
 }
-
 void ast_make_keyvalpair(char *key, char *value){
 	struct keyvalpairs *temp = malloc(sizeof(struct keyvalpairs));
 	temp->key = malloc(sizeof(char)*(strlen(key)+1));
@@ -197,7 +246,6 @@ void ast_make_keyvalpair(char *key, char *value){
 	}
 	if(ASTVERBOSE())printf("\n");
 }
-
 void ast_add_mapdeclnode(char *mapname){
 	struct mapvarlist *newmapvar = malloc(sizeof(struct mapvarlist));
 	newmapvar->mapname = malloc(sizeof(char)*(strlen(mapname)+1));
@@ -214,7 +262,6 @@ void ast_add_mapdeclnode(char *mapname){
 	}
 	if(ASTVERBOSE())printf("\n");
 }
-
 void ast_add_seq_mapdecl(){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_MAPVARDECL;
@@ -222,7 +269,6 @@ void ast_add_seq_mapdecl(){
 	currentsequentialhead->child.mapvardecl->mapvarlist = currentmapvarlisthead;
 	currentmapvarlisthead = NULL;
 }
-
 void ast_add_seq_vardecl(){
 	currentsequentialhead = malloc(sizeof(struct ast_sequentialnode));
 	currentsequentialhead->childtype = AST_GENVARDECL;
@@ -230,7 +276,6 @@ void ast_add_seq_vardecl(){
 	currentsequentialhead->child.genvardecl->list = currentvardeclassignmentlisthead;
 	currentvardeclassignmentlisthead = NULL;
 }
-
 void ast_make_vardecl_assignment(char *varname, char *value){
 	struct vardecl_assignmentlist *tempvardeclassignmentlist = malloc(sizeof(struct vardecl_assignmentlist));
 	tempvardeclassignmentlist->varname = malloc(sizeof(char)*(strlen(varname)+1));
@@ -238,11 +283,13 @@ void ast_make_vardecl_assignment(char *varname, char *value){
 	if(!strcmp(value,"0")){
 		tempvardeclassignmentlist->value = malloc(sizeof(char)*(strlen(value)+1));
 		strcpy(tempvardeclassignmentlist->value, value);
+		tempvardeclassignmentlist->type = VARDECL_VALUE;
 	}
 	else{
 		tempvardeclassignmentlist->value = NULL;
 		tempvardeclassignmentlist->expr = currentexpression1head->data;
 		currentexpression1head = currentexpression1head->next;
+		tempvardeclassignmentlist->type = VARDECL_EXPR;
 	}
 	tempvardeclassignmentlist->next = currentvardeclassignmentlisthead;
 	currentvardeclassignmentlisthead = tempvardeclassignmentlist;
@@ -257,11 +304,9 @@ void ast_make_vardecl_assignment(char *varname, char *value){
 	if(ASTVERBOSE())printf("\n");
 	ast_display_exprll_status();
 }
-
 void ast_make_vardecl_assignment_defaultval(char *varname){
 	ast_make_vardecl_assignment(varname, "0");
 }
-
 void ast_add_arguments_string(char *argstr){
 	if(ASTVERBOSE())printf(":AST: Function arg discrete STRING type: %s\n",argstr);
 	struct functioncallargs *temp = malloc(sizeof(struct functioncallargs));
@@ -452,7 +497,7 @@ void ast_add_expr3_unprecdiscrsucc(){
 		//case DISCRETE_FUNCTIONCALL: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
 		//case DISCRETE_SHELLECHO: if(ASTVERBOSE())printf("string = %s|", temp->data->disc_term->termdata); break;
 	}
-	printf("|(null)}\n");
+	printf("(null)}\n");
 	//ast_display_expr3_discrete_termll_status();
 	//ast_display_expr3_unary_precll_status();
 	ast_display_exprll_status();
@@ -636,7 +681,7 @@ void ast_add_condition_relopr(enum relopr rel){
 		case REL_LE: if(ASTVERBOSE())printf("REL_LE "); break;
 	}
 	if(ASTVERBOSE())printf("to relopr LL\n");
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition_unary(enum negation neg){
 	if(ASTVERBOSE())printf(":AST: Added unary condtion modifier ");
@@ -649,7 +694,7 @@ void ast_add_condition_unary(enum negation neg){
 		case NEG_NO: if(ASTVERBOSE())printf("NEG_NO "); break;
 	}
 	if(ASTVERBOSE())printf(" \n");
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition_component_string(char *str){
 	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {string|%s}\n", str);
@@ -660,7 +705,7 @@ void ast_add_condition_component_string(char *str){
 	temp->data->type  = COMP_STR;
 	temp->data->name = malloc(sizeof(char)*(strlen(str)+1));
 	strcpy(temp->data->name, str);
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition_component_varname(char *varname){
 	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {varname|%s}\n", varname);
@@ -671,7 +716,7 @@ void ast_add_condition_component_varname(char *varname){
 	temp->data->type  = COMP_VARNAME;
 	temp->data->name = malloc(sizeof(char)*(strlen(varname)+1));
 	strcpy(temp->data->name, varname);
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition_component_shellecho(char *echo){
 	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {shellecho|%s}\n", echo);
@@ -683,7 +728,7 @@ void ast_add_condition_component_shellecho(char *echo){
 	temp->data->shellecho = malloc(sizeof(struct ast_sequential_shellecho));
 	temp->data->shellecho->value = malloc(sizeof(char)*(strlen(echo)+1));
 	strcpy(temp->data->shellecho->value, echo);
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition_component_functioncall(char *funcname){
 	if(ASTVERBOSE())printf(":AST: Added conditioncomponent {functioncall|%s}\n", funcname);
@@ -696,7 +741,7 @@ void ast_add_condition_component_functioncall(char *funcname){
 	temp->data->func->functionname = malloc(sizeof(char)*(strlen(funcname)+1));
 	temp->data->func->args = currentfunccallargshead->data;
 	currentfunccallargshead = currentfunccallargshead->next;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 	ast_display_funcll_status();
 }
 void ast_add_condition1_condition2(){
@@ -709,7 +754,7 @@ void ast_add_condition1_condition2(){
 	temp->data->cond2 = currentcondition2head->data;
 	currentcondition2head = currentcondition2head->next;
 	temp->data->cond1 = NULL;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition2_condition3(){
 	if(ASTVERBOSE())printf(":AST: Shifting condition3 element to condition2\n");
@@ -721,7 +766,7 @@ void ast_add_condition2_condition3(){
 	temp->data->cond3 = currentcondition3head->data;
 	currentcondition3head = currentcondition3head->next;
 	temp->data->cond2 = NULL;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition1_lor_condition2(){
 	if(ASTVERBOSE())printf(":AST: ORing condition2 element to condition1\n");
@@ -731,7 +776,7 @@ void ast_add_condition1_lor_condition2(){
 	currentcondition1head->data = temp;
 	temp->cond2 = currentcondition2head->data;
 	currentcondition2head = currentcondition2head->next;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_condition2_land_condition3(){
 	if(ASTVERBOSE())printf(":AST: ANDing condition3 element to condition2\n");
@@ -741,7 +786,7 @@ void ast_add_condition2_land_condition3(){
 	currentcondition2head->data = temp;
 	temp->cond3 = currentcondition3head->data;
 	currentcondition3head = currentcondition3head->next;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_discrete_condition_comp(){
 	if(ASTVERBOSE())printf(":AST: Condition discrete formed: single component\n");
@@ -756,7 +801,7 @@ void ast_add_discrete_condition_comp(){
 	temp->data->cond1 = NULL;
 	temp->data->neg = currentconditionnegationhead->neg;
 	currentconditionnegationhead = currentconditionnegationhead->next;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_discrete_condition_comp_rel_comp(){
 	if(ASTVERBOSE())printf(":AST: Condition discrete formed: component rel component\n");
@@ -773,7 +818,7 @@ void ast_add_discrete_condition_comp_rel_comp(){
 	temp->data->neg = NEG_NO;
 	temp->data->rel = currentreloprhead->rel;
 	currentreloprhead = currentreloprhead->next;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
 void ast_add_discrete_condition_unarycondition(){
 	if(ASTVERBOSE())printf(":AST: Shifting condition1 to condtion3: discrete term unary+condition\n");
@@ -792,9 +837,9 @@ void ast_add_discrete_condition_unarycondition(){
 	}
 	else
 		temp->data->neg = NEG_NO;
-	ast_display_condll_stauts();
+	ast_display_condll_status();
 }
-void ast_display_condll_stauts(){
+void ast_display_condll_status(){
 	if(ASTVERBOSE())printf(":AST: Current cond LL state: ");
 	int cnt = 0;
 	struct condition1ll *temp1 = currentcondition1head;

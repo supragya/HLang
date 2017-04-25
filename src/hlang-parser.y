@@ -38,13 +38,17 @@ function:
 	;
 
 enclosement:
-	BROPEN code BRCLOSE				{if(PARSERVERBOSE())printf("\t<ENCLOSEMENT>\n");}
+	beginenc code BRCLOSE				{if(PARSERVERBOSE())printf("\t<ENCLOSEMENT>\n");}
+	;
+
+beginenc:
+	BROPEN						{if(PARSERVERBOSE())printf("\t<ENCLOSEMENT BROPEN>\n"); struct ast_constructll *temp = malloc(sizeof(struct ast_constructll)); temp->next = currentconstructhead; currentconstructhead = temp;}
 	;
 
 code:
 	%empty
-	|code sequential_constuct			{if(PARSERVERBOSE())printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq("seq");}
-	|code selective_constructs			{if(PARSERVERBOSE())printf("\t<CODE: SELECTIVE CONSTRUCTS>\n"); ast_add_sel("sel");}
+	|code sequential_constuct			{if(PARSERVERBOSE())printf("\t<CODE: SEQUENTIAL CONSTRUCT>\n"); ast_add_seq();}
+	|code selective_constructs			{if(PARSERVERBOSE())printf("\t<CODE: SELECTIVE CONSTRUCTS>\n"); }
 	|code iterative_constructs			{if(PARSERVERBOSE())printf("\t<CODE: ITERATIVE CONSTRUCTIS>\n"); ast_add_iter("iter");	}
 	;
 
@@ -70,13 +74,13 @@ selective_constructs:
 	;
 
 ifblock:
-	IF PARANOPEN conditions PARANCLOSE enclosement	{if(PARSERVERBOSE())printf("\t<IF BLOCK>\n");}
+	IF PARANOPEN conditions PARANCLOSE enclosement	{if(PARSERVERBOSE())printf("\t<IF BLOCK>\n"); ast_add_sel_if();}
 
 elseblock:
-	ELSE enclosement				{if(PARSERVERBOSE())printf("\t<ELSE BLOCK>\n");}
+	ELSE enclosement				{if(PARSERVERBOSE())printf("\t<ELSE BLOCK>\n"); ast_add_sel_else();}
 
 elseifblocks:
-	ELIF PARANOPEN conditions PARANCLOSE enclosement		{if(PARSERVERBOSE())printf("\t<ELSEIF BLOCK: ONE>\n");}
+	ELIF PARANOPEN conditions PARANCLOSE enclosement		{if(PARSERVERBOSE())printf("\t<ELSEIF BLOCK: ONE>\n"); ast_add_sel_elif();}
 	|elseifblocks ELIF PARANOPEN conditions PARANCLOSE enclosement	{if(PARSERVERBOSE())printf("\t<ELSEIF BLOCK: RECURSIVE>\n");}
 	;
 

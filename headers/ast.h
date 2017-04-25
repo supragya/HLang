@@ -80,10 +80,15 @@ struct functioncallargsll{
 struct ast_sequential_genvardecl{
 	struct vardecl_assignmentlist *list;
 };
+enum vardecl_assignmentlisttype{
+	VARDECL_VALUE,
+	VARDECL_EXPR
+};
 struct vardecl_assignmentlist{
 	char *varname;
 	char *value;
 	struct expr_expression *expr;
+	enum vardecl_assignmentlisttype type;
 	struct vardecl_assignmentlist *next;
 };
 struct ast_sequential_mapvardecl{
@@ -131,7 +136,10 @@ struct ast_construct{
 	union ast_nextconstruct_ptr ptr;
 	struct ast_construct *next;
 };
-
+struct ast_constructll{
+	struct ast_construct *data;
+	struct ast_constructll *next;
+};
 struct ast_sequentialnode{
 	enum ast_selectiveconstructtype childtype;
 	union ast_sequential_code_ptr child;
@@ -139,9 +147,23 @@ struct ast_sequentialnode{
 
 struct ast_selectivenode{
 	char *name;
+	struct ast_ifsel *ifblock;
+	struct ast_elifsel *elifblock;
+	struct ast_elsesel *elseblock;
 	enum ast_constructtype_t nextconstructtype;
 };
-
+struct ast_ifsel{
+	struct condition1 *cond;
+	struct ast_construct *constructs;
+};
+struct ast_elifsel{
+	struct condition1 *cond;
+	struct ast_construct *constructs;
+	struct ast_elifsel *next;
+};
+struct ast_elsesel{
+	struct ast_construct *constructs;
+};
 struct ast_iterativenode{
 	char *name;
 	enum ast_iterativeconstructtype childtype;
@@ -320,7 +342,7 @@ struct conditionnegationll{
 };
 
 struct ast_root_node *rootnode;
-struct ast_construct *currentconstructhead;
+struct ast_constructll *currentconstructhead;
 struct ast_sequentialnode *currentsequentialhead;
 struct keyvalpairs *currentkeyvalpairshead;
 struct mapvarlist *currentmapvarlisthead;
@@ -345,7 +367,7 @@ struct conditionnegationll *currentconditionnegationhead;
 int ast_init();
 void ast_add_function(char *functionname);
 void ast_add_seq();
-void ast_add_sel(char *name);
+void ast_add_sel();
 void ast_add_iter(char *name);
 void ast_walk_constructs(struct ast_construct *head);
 void ast_advanceto_next_sequential_construct(struct ast_construct *temp_construct, unsigned int *flag);
@@ -396,9 +418,12 @@ void ast_add_condition1_condition2();
 void ast_add_condition2_condition3();
 void ast_add_condition1_lor_condition2();
 void ast_add_condition2_land_condition3();
-void ast_display_condll_stauts();
+void ast_display_condll_status();
 void ast_add_expr3_discrete_term_functioncall(char *functionname);
 void ast_add_expr3_discrete_term_shellecho(char *echo);
 void ast_add_argument_to_llnode();
 void ast_add_argument_to_llhead();
 void ast_display_funcll_status();
+void ast_add_sel_if();
+void ast_add_sel_elif();
+void ast_add_sel_else();
