@@ -55,7 +55,7 @@ For example if you want to run the interpreter with verbose output on screen fro
 
 The above gives verbose output from all of lexer, parser and abstract syntax tree. Also it is worth noting that `./run lpa` is equivalent to `./run alp`. The order does not matter.
 
-**NOTE: IT IS HIGHLY ADVICED FOR TESTING, YOU LET ALL MODULES VERBOSE USING `./run alpves` ***
+**NOTE: IT IS HIGHLY ADVICED FOR TESTING, YOU LET ALL MODULES VERBOSE USING `./run alpves` **
 
 
 What is the directory structure? Where are the tests?
