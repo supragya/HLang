@@ -13,7 +13,7 @@ HLang is a scripting language, whose interpreter's source code you have visited 
 
 Building HLang from source
 ----------------
-It is adviced as above, if you want to evaluate a stable system, please go to the release page here. Still, if you want to build the current version from source, make sure you have the given tools:
+It is advised as above, if you want to evaluate a stable system, please go to the release page [here](https://www.github.com/supragya/HLang/releases). Still, if you want to build the current version from source, make sure you have the given tools:
 1. bison (GNU Bison) 3.0.4
 2. flex 2.6.0
 3. gcc 5.4.0
@@ -54,6 +54,8 @@ For example if you want to run the interpreter with verbose output on screen fro
     ./run lpa
 
 The above gives verbose output from all of lexer, parser and abstract syntax tree. Also it is worth noting that `./run lpa` is equivalent to `./run alp`. The order does not matter.
+
+**NOTE: IT IS HIGHLY ADVICED FOR TESTING, YOU LET ALL MODULES VERBOSE USING `./run alpves` ***
 
 
 What is the directory structure? Where are the tests?
@@ -122,12 +124,12 @@ HLang constructs are as follows (along with availability in AAd04):
 * Iterative construct  - for loop(Not implementd)
 
 #### Sequential - General variable declarations
-Sequential general variable decalration can declare and assign values to general variables (`$var`, `$roo`), and map element names(`$rr[5]`). For map element declaration, the map needs to be in the maplist of `vms` or else, the declaration tries adding it. The assignment can be done using another variable and/or simple expressions (although expressions currently do not currently work with decimal points and negatives, they will be added). The expression can include varlues returned by shellechos and functioncalls in them. 
+Sequential general variable decalration can declare and assign values to general variables (`$var`, `$roo`), and map element names(`$rr[5]`). For map element declaration, the map needs to be in the maplist of `vms` or else, the declaration tries adding it. The assignment can be done using another variable and/or simple expressions (although expressions currently do not currently work with decimal points and negatives, they will be added). The expression can include values returned by shellechos and functioncalls in them. 
 Here is an example script snippet:
 
     declare $rr = $val, $var = 1+2*<% mkdir hlang >, $number1, $r[90];
     
-A few things worth noting: the declaration is reverse (aka right to left). Hence, `$var` gets declared first and then `$rr`. Hence `$rr = $val` is valid. The shelleco `<% mkdir hlang >` is a random string which actually was to be sent to the shell. This returns a return value which is plugged in here. This is not coupled with HelenOS BDSH at the present moment, hence a dummy executor asks in this case for a return value. (Presently any non zero return value is treated as 1, not the return value, needs correction there).
+A few things worth noting: the declaration is reverse (aka right to left). Hence, `$var` gets declared first and then `$rr`. Hence `$rr = $val` is valid. The shellecho `<% mkdir hlang >` is a string which actually was to be sent to the shell. This returns a return value which is plugged in here. This is not coupled with HelenOS BDSH at the present moment, hence a dummy executor asks in this case for a return value. (Presently any non zero return value is treated as 1, not the return value, needs correction there).
 
 #### Sequential - Map variable declarations
 A map variable can be declared either with assignments or without assignments. Both are as follows:
@@ -162,5 +164,5 @@ HLang does nothing new here. Just an old fashioned condition based execution sys
 #### Iterative - while loop
 Old fashioned while loop. Parsed and in AST, need to add structures for execution in `executor.c`
 
-#### Sequential - for loop
+#### Iterative - for loop
 Old fashioned for loop. Parsed and in AST, need to add structures for execution in `executor.c`
