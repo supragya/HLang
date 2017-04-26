@@ -102,4 +102,65 @@ First, let's talk about where HLang sits when compared with BDSH shell system. T
 As with any interpreter, the HLang interpreter tries reading and executing the file token by token. However, the AST generation is tightly liked with parsing - which is in sequence to execution before the script executor. It is worth considering: The interpreter creates full AST before executing the first line of the script. This has a drawback: larger amount of memory is required when AST is made fully than freed on line by line execution. However this has a few advantages too: Since AST generation is done first, there is no need to create a function declaration before calling the function, the parsing errors are handled before the executor error and one major thing (however optional): This allows AST to be saved on a file, compiling it source to source for recurring scripts. A minimal interpreter (stripped down version of HLang, only executor) may be deployed in low memory scenario.
 
 ### HLang variable management system
-For HLang, everything is a string be it `"hello"` or `20`. Both internally are stored as string in what we call as `storagebibn`. The storage bin is a hashmap structure with open addressing that allows for concept of scopes. There is no global scope, at max there is a function scope. Any variables to be passed, needs to be passed as an argument. This brings us to another concept: removal of function signature. Because everything is a string, 
+For HLang, everything is a string be it `"hello"` or `20`. Both internally are stored as strings in what we call as `storagebin`. The storage bin is a hashmap structure with open addressing that allows for concept of scopes. Scopes allow variables to be allocated or deallocated as required braces open or close(This does differentiate between `keyvalpairs` decalaration of map variables. There is no global scope, at max there is a function scope. Any variables to be passed between functions, needs to be passed as an argument(see `executor.c`). This brings us to another concept: removal of function signature. Because everything is a string, and some functions may require multiple number of arguments, the signature does not make sense. Hence, any function definition does not have that, there is just names. **This is implemented**
+
+### HLang libraries
+The architecture of HLang execution is simplistic, it first reads the AST root node and tries finding the function to call (initially main). This can be tweaked to look beyond - to run commands written in C if the function the script is trying to call is not defined. For sake of simpliciy and segregation, these functioncall will have a prefix of `HL_`. For example, for finding the number of arguments, `HL_ARGLEN()` may be called, for string comparison or concatenation `HL_STCMP()` or `HL_STRCAT()` may be called. This allows for fast execution of functions and do not require AST traversal. **This is currently not implemented**
+
+HLang constructs
+----------------
+
+HLang constructs are as follows (along with availability in AAd04):
+* Sequential construct - General variable declarations (Implemented)
+* Sequential construct - Map variable declarations (Implemented)
+* Sequential construct - Variable assignments (Partially implemented)
+* Sequential construct - Shellecho (Partially implemented)
+* Sequential construct - Return (Not implemented - needs implementation of argument stack, WIP)
+* Sequential construct - Functioncall (Partially implemented - does not pass or recieve arguments and returns)
+* Selective construct  - IF-ELIF-ELSE(Implemented)
+* Iterative construct  - while loop (Not implemented)
+* Iterative construct  - for loop(Not implementd)
+
+#### Sequential - General variable declarations
+Sequential general variable decalration can declare and assign values to general variables (`$var`, `$roo`), and map element names(`$rr[5]`). For map element declaration, the map needs to be in the maplist of `vms` or else, the declaration tries adding it. The assignment can be done using another variable and/or simple expressions (although expressions currently do not currently work with decimal points and negatives, they will be added). The expression can include varlues returned by shellechos and functioncalls in them. 
+Here is an example script snippet:
+
+    declare $rr = $val, $var = 1+2*<% mkdir hlang >, $number1, $r[90];
+    
+A few things worth noting: the declaration is reverse (aka right to left). Hence, `$var` gets declared first and then `$rr`. Hence `$rr = $val` is valid. The shelleco `<% mkdir hlang >` is a random string which actually was to be sent to the shell. This returns a return value which is plugged in here. This is not coupled with HelenOS BDSH at the present moment, hence a dummy executor asks in this case for a return value. (Presently any non zero return value is treated as 1, not the return value, needs correction there).
+
+#### Sequential - Map variable declarations
+A map variable can be declared either with assignments or without assignments. Both are as follows:
+
+    declare map $nonassignedmap;
+    declare map $assignedmap = {"key1" is 90, "key2" is "hello, "0" is 500};
+
+It is worth noting that the expressions as values donot work currently with maps. This will be added soon. Also, iterating over a map needs full vms variable table lookup. TODO: Needs to save the binlocations of map elements with the map list.
+
+#### Sequential - Variable assignments
+While variable assignments does allow expressions, functioncall returns and shellechos for registering the assignment, at the current state, the system only is able to do: PREINCR, POSTINCR, PREDECR, POSTDECR as follows:
+
+    $var++;
+    ++$var;
+    $var--;
+    --$var;
+
+Todo: expression addition etc.
+
+#### Sequential - Shellecho
+Shellechos are the way of HLang's talking to BDSH. This needs work, it does not substitute values in scenarios such as `<% cat {$filename} >`. This is one of the main concerns when it comes to going ahead. A substitution system is required for cases such as `$mapvariable[{$iteratorval}]` as well. Shellechos return execution status of the program: needs implementation to get the output data as well (will be easy through HLang library implementation)
+
+#### Sequential - Return statements 
+Not implemented - all functions return int - incorrect.
+
+#### Sequential - Functioncalls
+Functioncalls are permitted. However the return values cannot be taken out - argument stacks are not in place.
+
+#### Selective - if-elif-else
+HLang does nothing new here. Just an old fashioned condition based execution system. However, one thing worth noting is that HLang does not allow optional braces when it comes to single line executions after conditionals.
+
+#### Iterative - while loop
+Old fashioned while loop. Parsed and in AST, need to add structures for execution in `executor.c`
+
+#### Sequential - for loop
+Old fashioned for loop. Parsed and in AST, need to add structures for execution in `executor.c`
