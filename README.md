@@ -18,7 +18,7 @@ It is advised as above, if you want to evaluate a stable system, please go to th
 2. flex 2.6.0
 3. gcc 5.4.0
 
-It is not absolutely necessary that you may need the exact version numbers of the gives tools, however this is on what the source was build initially. Check your versions using `bison --version`, `flex --version` and `gcc version` commands. Once you have those, download the code from the repository to a local machine using:
+It is not absolutely necessary that you may need the exact version numbers of the gives tools, however this is on what the source was build initially. Check your versions using `bison --version`, `flex --version` and `gcc --version` commands. Once you have those, download the code from the repository to a local machine using:
 
     git clone https://github.com/supragya/HLang.git HLang
 
