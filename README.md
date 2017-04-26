@@ -127,9 +127,9 @@ HLang constructs are as follows (along with availability in AAd04):
 Sequential general variable decalration can declare and assign values to general variables (`$var`, `$roo`), and map element names(`$rr[5]`). For map element declaration, the map needs to be in the maplist of `vms` or else, the declaration tries adding it. The assignment can be done using another variable and/or simple expressions (although expressions currently do not currently work with decimal points and negatives, they will be added). The expression can include values returned by shellechos and functioncalls in them. 
 Here is an example script snippet:
 
-    declare $rr = $val, $var = 1+2*<% mkdir hlang >, $number1, $r[90];
+    declare $rr = $val, $val = 1+2*<% mkdir hlang >, $number1, $r[90];
     
-A few things worth noting: the declaration is reverse (aka right to left). Hence, `$var` gets declared first and then `$rr`. Hence `$rr = $val` is valid. The shellecho `<% mkdir hlang >` is a string which actually was to be sent to the shell. This returns a return value which is plugged in here. This is not coupled with HelenOS BDSH at the present moment, hence a dummy executor asks in this case for a return value. (Presently any non zero return value is treated as 1, not the return value, needs correction there).
+A few things worth noting: the declaration is reverse (aka right to left). Hence, `$val` gets declared first and then `$rr`. Hence `$rr = $val` is valid. The shellecho `<% mkdir hlang >` is a string which actually was to be sent to the shell. This returns a return value which is plugged in here. This is not coupled with HelenOS BDSH at the present moment, hence a dummy executor asks in this case for a return value. (Presently any non zero return value is treated as 1, not the return value, needs correction there).
 
 #### Sequential - Map variable declarations
 A map variable can be declared either with assignments or without assignments. Both are as follows:
